@@ -1,0 +1,16 @@
+node_modules/
+build/
+*.ptau
+*.r1cs
+*.sym
+*.wasm
+*.zkey
+*.vkey
+*.json.proof
+*.json.public
+verification_key.json
+data/merkle-tree.json
+circuits/merkle-proof_js/
+circuits/vote_js/
+.DS_Store
+*.log
