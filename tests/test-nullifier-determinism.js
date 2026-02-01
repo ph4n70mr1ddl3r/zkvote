@@ -1,4 +1,3 @@
-import fs from 'fs';
 import path from 'path';
 import { ethers } from 'ethers';
 import { signVoteMessage, signatureToFieldElements } from '../utils/eip712.js';
@@ -30,7 +29,6 @@ async function testNullifierDeterminism() {
         console.log('-'.repeat(DISPLAY_WIDTH.STANDARD));
 
         const topic1 = 'topic-A';
-        const message1 = 'Vote A';
 
         console.log(`  Generating two signatures for voter 1, topic "${topic1}"...`);
 

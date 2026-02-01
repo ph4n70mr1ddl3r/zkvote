@@ -173,15 +173,22 @@ if (args.length < 2) {
     process.exit(1);
 }
 
-let voterIndex, voteMessage, useInvalid = false;
+let voterIndex;
+let voteMessage;
+let useInvalid = false;
 
 if (args[0] === '--invalid') {
     useInvalid = true;
     voterIndex = parseInt(args[1]);
-    voteMessage = args.slice(2).join(' ');
+    voteMessage = args.slice(2).join(' ').trim();
 } else {
     voterIndex = parseInt(args[0]);
-    voteMessage = args.slice(1).join(' ');
+    voteMessage = args.slice(1).join(' ').trim();
+}
+
+if (!voteMessage || voteMessage.length === 0) {
+    console.error('Error: Vote message cannot be empty');
+    process.exit(1);
 }
 
 generateProof(voterIndex, voteMessage, useInvalid)

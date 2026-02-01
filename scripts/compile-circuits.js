@@ -49,8 +49,12 @@ async function runCommand(command, description) {
     console.log(`\n🔨 ${description}...`);
     try {
         const { stdout, stderr } = await execAsync(command);
-        if (stdout) console.log(stdout);
-        if (stderr && !stderr.includes('Warning')) console.error(stderr);
+        if (stdout) {
+            console.log(stdout);
+        }
+        if (stderr && !stderr.includes('Warning')) {
+            console.error(stderr);
+        }
         console.log(`✅ ${description} complete`);
     } catch (error) {
         console.error(`❌ Error in ${description}:`);
@@ -125,7 +129,7 @@ async function main() {
     console.log('\n🎉 Circuit compilation complete!');
     console.log(`   Circuit: ${CIRCUIT_CONFIG.CIRCUIT_NAME}.circom`);
     console.log(`   R1CS: ${buildPath}.r1cs`);
-    console.log(`   WASM: ${buildPath}_js/${CIRCUIT_NAME}.wasm`);
+    console.log(`   WASM: ${buildPath}_js/${CIRCUIT_CONFIG.CIRCUIT_NAME}.wasm`);
     console.log(`   Proving key: ${zkeyPath}`);
     console.log(`   Verification key: ${vkeyPath}`);
     console.log(`   Solidity verifier: ${verifierPath}`);

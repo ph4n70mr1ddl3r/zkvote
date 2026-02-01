@@ -58,11 +58,8 @@ async function main() {
         }
     } catch (error) {
         console.error('❌ Error building Merkle tree:', error.message);
-        throw error;
+        process.exit(1);
     }
 }
 
-main().catch((error) => {
-    console.error('Fatal error:', error.message);
-    process.exit(1);
-});
+main();

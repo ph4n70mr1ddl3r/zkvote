@@ -107,12 +107,18 @@ async function verifyProof(proofPath) {
 // CLI interface
 const args = process.argv.slice(2);
 
-let proofPath;
+const proofPath = args.length === 0
+    ? path.join(process.cwd(), FILE_PATHS.build.latestProof)
+    : args[0].trim();
 
-if (args.length === 0) {
-    proofPath = path.join(process.cwd(), FILE_PATHS.build.latestProof);
-} else {
-    proofPath = args[0];
+if (!proofPath || proofPath.length === 0) {
+    console.error('Error: Proof path cannot be empty');
+    process.exit(1);
+}
+
+if (!path.isAbsolute(proofPath) && !fs.existsSync(path.resolve(proofPath))) {
+    console.error(`Error: Invalid proof path: ${proofPath}`);
+    process.exit(1);
 }
 
 verifyProof(proofPath)

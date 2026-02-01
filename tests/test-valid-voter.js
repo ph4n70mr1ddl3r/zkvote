@@ -1,4 +1,3 @@
-import fs from 'fs';
 import path from 'path';
 import { ethers } from 'ethers';
 import * as snarkjs from 'snarkjs';

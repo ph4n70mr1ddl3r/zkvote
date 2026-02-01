@@ -2,7 +2,6 @@ import { ethers } from 'ethers';
 import fs from 'fs';
 import path from 'path';
 import { FILE_PATHS, NUM_ACCOUNTS } from '../utils/constants.js';
-import { readAndValidateJsonFile } from '../utils/json-helper.js';
 
 /**
  * Generate Ethereum accounts for testing the ZKP voting system

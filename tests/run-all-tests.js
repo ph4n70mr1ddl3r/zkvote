@@ -40,7 +40,9 @@ async function runTest(test) {
     try {
         const { stdout, stderr } = await execAsync(`node ${test.file}`);
 
-        if (stdout) console.log(stdout);
+        if (stdout) {
+            console.log(stdout);
+        }
         if (stderr && !stderr.includes('ExperimentalWarning')) {
             console.log('Stderr:', stderr);
         }
