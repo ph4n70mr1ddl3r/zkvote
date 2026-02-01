@@ -8,6 +8,8 @@ import { DOMAIN_CONFIG, VOTE_TYPES } from './constants.js';
 
 /**
  * Create EIP-712 domain for the voting system
+ * @param {string} topicId - Unique identifier for the voting topic
+ * @returns {Object} EIP-712 domain object
  */
 export function createDomain(topicId) {
     return {
@@ -18,11 +20,14 @@ export function createDomain(topicId) {
 
 /**
  * Create EIP-712 types for vote message
+ * @type {Object}
  */
 export const voteTypes = VOTE_TYPES;
 
 /**
  * Create vote message structure
+ * @param {string} topicId - Unique identifier for the voting topic
+ * @returns {Object} Vote message object
  */
 export function createVoteMessage(topicId) {
     return {
@@ -33,6 +38,10 @@ export function createVoteMessage(topicId) {
 /**
  * Sign a vote message using EIP-712
  * Returns deterministic signature components
+ * @param {Object} wallet - Ethers wallet instance
+ * @param {string} topicId - Unique identifier for the voting topic
+ * @returns {Promise<Object>} Signature components including r, s, v, and messageHash
+ * @throws {Error} If topicId is invalid
  */
 export async function signVoteMessage(wallet, topicId) {
     if (!topicId || typeof topicId !== 'string' || topicId.trim().length === 0) {
@@ -42,10 +51,8 @@ export async function signVoteMessage(wallet, topicId) {
     const domain = createDomain(topicId);
     const message = createVoteMessage(topicId);
 
-    // Sign using EIP-712
     const signature = await wallet.signTypedData(domain, voteTypes, message);
 
-    // Split signature into r, s, v components
     const sig = ethers.Signature.from(signature);
 
     return {
@@ -59,6 +66,8 @@ export async function signVoteMessage(wallet, topicId) {
 
 /**
  * Extract signature components as field elements for circuit input
+ * @param {Object} sig - Signature object with r, s, and v properties
+ * @returns {Object} Object with r, s, and v as string values
  */
 export function signatureToFieldElements(sig) {
     return {
@@ -70,6 +79,9 @@ export function signatureToFieldElements(sig) {
 
 /**
  * Recover signer address from signature (for verification)
+ * @param {string} topicId - Unique identifier for the voting topic
+ * @param {string} signature - Signature to verify
+ * @returns {string} Recovered Ethereum address
  */
 export function recoverSigner(topicId, signature) {
     const domain = createDomain(topicId);

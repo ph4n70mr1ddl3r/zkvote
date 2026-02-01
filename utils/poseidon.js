@@ -2,6 +2,10 @@ import { buildPoseidon } from 'circomlibjs';
 
 let poseidonInstance = null;
 
+/**
+ * Get or create a singleton Poseidon hash instance
+ * @returns {Promise<Object>} Poseidon instance
+ */
 export async function getPoseidon() {
     if (!poseidonInstance) {
         poseidonInstance = await buildPoseidon();
@@ -9,12 +13,17 @@ export async function getPoseidon() {
     return poseidonInstance;
 }
 
+/**
+ * Reset the singleton Poseidon instance (useful for testing)
+ */
 export function resetPoseidonInstance() {
     poseidonInstance = null;
 }
 
 /**
  * Hash a single value using Poseidon
+ * @param {string|number} input - Value to hash
+ * @returns {Promise<string>} Hash as a string
  */
 export async function poseidonHash(input) {
     const poseidon = await getPoseidon();
@@ -24,6 +33,9 @@ export async function poseidonHash(input) {
 
 /**
  * Hash two values using Poseidon (used for Merkle tree)
+ * @param {string|number} left - Left value to hash
+ * @param {string|number} right - Right value to hash
+ * @returns {Promise<string>} Hash as a string
  */
 export async function poseidonHash2(left, right) {
     const poseidon = await getPoseidon();
@@ -33,6 +45,8 @@ export async function poseidonHash2(left, right) {
 
 /**
  * Hash multiple values using Poseidon
+ * @param {Array<string|number>} inputs - Array of values to hash
+ * @returns {Promise<string>} Hash as a string
  */
 export async function poseidonHashMany(inputs) {
     const poseidon = await getPoseidon();
@@ -42,6 +56,9 @@ export async function poseidonHashMany(inputs) {
 
 /**
  * Convert Ethereum address to field element
+ * @param {string} address - Ethereum address with 0x prefix
+ * @returns {string} Address as a field element string
+ * @throws {Error} If address is invalid
  */
 export function addressToFieldElement(address) {
     if (typeof address !== 'string') {
@@ -60,6 +77,11 @@ export function addressToFieldElement(address) {
 /**
  * Compute nullifier from signature and topic ID
  * This is used to prevent double voting
+ * @param {string|number} sigR - Signature r component
+ * @param {string|number} sigS - Signature s component
+ * @param {string|number} topicIdHash - Hashed topic ID
+ * @returns {Promise<string>} Nullifier hash
+ * @throws {Error} If required parameters are missing
  */
 export async function computeNullifier(sigR, sigS, topicIdHash) {
     if (!sigR || !sigS) {
@@ -69,7 +91,7 @@ export async function computeNullifier(sigR, sigS, topicIdHash) {
         throw new Error('Topic ID hash is required');
     }
 
-    return await poseidonHashMany([
+    return poseidonHashMany([
         BigInt(sigR),
         BigInt(sigS),
         BigInt(topicIdHash)

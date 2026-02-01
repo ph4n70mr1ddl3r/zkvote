@@ -12,6 +12,10 @@ import { readAndValidateJsonFile } from '../utils/json-helper.js';
 async function verifyProof(proofPath) {
     console.log('🔍 Verifying ZK proof...\n');
 
+    if (!proofPath || typeof proofPath !== 'string') {
+        throw new Error('Invalid proof path provided');
+    }
+
     try {
         if (!fs.existsSync(proofPath)) {
             throw new Error(`Proof file not found: ${proofPath}`);
@@ -20,12 +24,21 @@ async function verifyProof(proofPath) {
         const proofData = readAndValidateJsonFile(proofPath, {
             requiredFields: ['proof', 'publicSignals', 'metadata']
         });
-    console.log('📋 Proof metadata:');
-    console.log(`   Voter: ${proofData.metadata.voterAddress}`);
-    console.log(`   Topic: ${proofData.metadata.topicId}`);
-    console.log(`   Message: "${proofData.metadata.voteMessage}"`);
-    console.log(`   Timestamp: ${proofData.metadata.timestamp}`);
-    console.log(`   Invalid voter: ${proofData.metadata.isInvalidVoter ? 'Yes ⚠️' : 'No'}\n`);
+
+        if (!proofData.proof || !proofData.publicSignals) {
+            throw new Error('Invalid proof structure: missing proof or publicSignals');
+        }
+
+        if (!Array.isArray(proofData.publicSignals)) {
+            throw new Error('Invalid proof structure: publicSignals must be an array');
+        }
+
+        console.log('📋 Proof metadata:');
+        console.log(`   Voter: ${proofData.metadata.voterAddress}`);
+        console.log(`   Topic: ${proofData.metadata.topicId}`);
+        console.log(`   Message: "${proofData.metadata.voteMessage}"`);
+        console.log(`   Timestamp: ${proofData.metadata.timestamp}`);
+        console.log(`   Invalid voter: ${proofData.metadata.isInvalidVoter ? 'Yes ⚠️' : 'No'}\n`);
 
     const vkeyPath = path.join(process.cwd(), FILE_PATHS.build.verificationKey);
 
@@ -86,7 +99,7 @@ async function verifyProof(proofPath) {
 
         return isValid;
     } catch (error) {
-        console.error('❌ Error in verifyProof:', error.message);
+        console.error('❌ Error verifying proof:', error.message);
         throw error;
     }
 }

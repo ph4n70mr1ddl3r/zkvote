@@ -1,6 +1,13 @@
 import fs from 'fs';
 import path from 'path';
 
+/**
+ * Read and validate a JSON file from the filesystem
+ * @param {string} filePath - Path to the JSON file
+ * @param {Object} schema - Validation schema with optional fields: requiredFields, isArray, objectType
+ * @returns {Object|Array} Parsed and validated JSON data
+ * @throws {Error} If file doesn't exist, cannot be parsed, or fails validation
+ */
 export function readAndValidateJsonFile(filePath, schema) {
     if (!fs.existsSync(filePath)) {
         throw new Error(`File not found: ${filePath}`);
@@ -20,6 +27,12 @@ export function readAndValidateJsonFile(filePath, schema) {
     return data;
 }
 
+/**
+ * Validate data against a schema
+ * @param {*} data - Data to validate
+ * @param {Object} schema - Validation schema
+ * @throws {Error} If validation fails
+ */
 function validateSchema(data, schema) {
     if (schema.requiredFields) {
         for (const field of schema.requiredFields) {

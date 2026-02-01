@@ -3,7 +3,7 @@ import path from 'path';
 import { ethers } from 'ethers';
 import * as snarkjs from 'snarkjs';
 import { signVoteMessage, signatureToFieldElements } from '../utils/eip712.js';
-import { getMerkleProof, proofToCircuitInput } from '../utils/merkle-helper.js';
+import { getMerkleProof } from '../utils/merkle-helper.js';
 import { addressToFieldElement, computeNullifier } from '../utils/poseidon.js';
 import { DEFAULT_TOPIC_ID, FILE_PATHS, MAX_VOTE_MESSAGE_LENGTH, MERKLE_PADDING_VALUE, TREE_DEPTH, PUBLIC_SIGNAL } from '../utils/constants.js';
 import { readAndValidateJsonFile } from '../utils/json-helper.js';
@@ -158,7 +158,7 @@ async function generateProof(voterIndex, voteMessage, useInvalid = false) {
 
         return proofData;
     } catch (error) {
-        console.error('❌ Error in generateProof:', error.message);
+        console.error('❌ Error generating proof:', error.message);
         throw error;
     }
 }

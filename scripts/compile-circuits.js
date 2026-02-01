@@ -3,7 +3,7 @@ import { promisify } from 'util';
 import fs from 'fs';
 import path from 'path';
 import https from 'https';
-import { CIRCUIT_CONFIG } from '../utils/constants.js';
+import { CIRCUIT_CONFIG, PTAU_MIN_FILE_SIZE } from '../utils/constants.js';
 
 const execAsync = promisify(exec);
 
@@ -25,7 +25,7 @@ async function downloadFile(url, filepath) {
             file.on('finish', () => {
                 file.close();
                 const stats = fs.statSync(filepath);
-                if (stats.size < 1000000) {
+                if (stats.size < PTAU_MIN_FILE_SIZE) {
                     fs.unlinkSync(filepath);
                     reject(new Error('Downloaded file is too small, likely an error response'));
                 } else {

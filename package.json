@@ -14,7 +14,11 @@
     "test:valid": "node tests/test-valid-voter.js",
     "test:invalid": "node tests/test-invalid-voter.js",
     "test:double-vote": "node tests/test-double-voting.js",
-    "test:nullifier": "node tests/test-nullifier-determinism.js"
+    "test:nullifier": "node tests/test-nullifier-determinism.js",
+    "lint": "eslint . --ext .js",
+    "lint:fix": "eslint . --ext .js --fix",
+    "format": "prettier --write \"**/*.{js,json}\"",
+    "format:check": "prettier --check \"**/*.{js,json}\""
   },
   "keywords": [
     "zero-knowledge",
