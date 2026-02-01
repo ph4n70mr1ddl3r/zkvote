@@ -65,8 +65,8 @@ async function testInvalidVoter() {
         try {
             ({ proof, publicSignals } = await snarkjs.groth16.fullProve(
                 input,
-                path.join(process.cwd(), 'build', 'vote_js', 'vote.wasm'),
-                path.join(process.cwd(), 'build', 'vote.zkey')
+                path.join(process.cwd(), FILE_PATHS.build.wasm),
+                path.join(process.cwd(), FILE_PATHS.build.zkey)
             ));
 
             console.log('✓ Proof generated (but will not verify)\n');
@@ -80,7 +80,7 @@ async function testInvalidVoter() {
         // Try to verify the proof
         console.log('⚙️  Attempting to verify proof...');
         const vkey = readAndValidateJsonFile(
-            path.join(process.cwd(), 'build', 'vote_verification_key.json'),
+            path.join(process.cwd(), FILE_PATHS.build.verificationKey),
             {
                 requiredFields: ['vk_alpha_1', 'vk_beta_2', 'vk_gamma_2', 'vk_delta_2', 'IC']
             }

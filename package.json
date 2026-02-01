@@ -38,6 +38,8 @@
     "snarkjs": "^0.7.3"
   },
   "devDependencies": {
-    "circom_tester": "^0.0.19"
+    "circom_tester": "^0.0.19",
+    "eslint": "^8.56.0",
+    "prettier": "^3.1.1"
   }
 }

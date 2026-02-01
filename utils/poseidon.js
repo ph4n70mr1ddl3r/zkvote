@@ -11,7 +11,10 @@ export async function getPoseidon() {
     if (!poseidonPromise) {
         poseidonPromise = buildPoseidon();
     }
-    poseidonInstance = await poseidonPromise;
+    const instance = await poseidonPromise;
+    if (!poseidonInstance) {
+        poseidonInstance = instance;
+    }
     return poseidonInstance;
 }
 
@@ -94,9 +97,13 @@ export async function computeNullifier(sigR, sigS, topicIdHash) {
         throw new Error('Topic ID hash is required');
     }
 
-    return poseidonHashMany([
-        BigInt(sigR),
-        BigInt(sigS),
-        BigInt(topicIdHash)
-    ]);
+    try {
+        return poseidonHashMany([
+            BigInt(sigR),
+            BigInt(sigS),
+            BigInt(topicIdHash)
+        ]);
+    } catch (error) {
+        throw new Error(`Invalid signature or topic ID hash: ${error.message}`);
+    }
 }

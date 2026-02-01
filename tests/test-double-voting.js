@@ -121,7 +121,7 @@ async function testDoubleVoting() {
             throw new Error('Second proof verification failed!');
         }
 
-        const nullifier2 = ps2[0];
+        const nullifier2 = ps2[PUBLIC_SIGNAL.NULLIFIER];
         console.log(`   ✅ Proof verified`);
         console.log(`   Nullifier: ${nullifier2}`);
 

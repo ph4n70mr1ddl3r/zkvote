@@ -70,6 +70,7 @@ export function getMerkleProof(tree, leafIndex) {
 
 /**
  * Verify a Merkle proof
+ * @deprecated Currently unused but available for future verification needs
  */
 export async function verifyMerkleProof(leaf, proof, root) {
     let current = leaf;
