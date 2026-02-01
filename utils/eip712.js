@@ -19,7 +19,7 @@ export function createDomain(topicId) {
 
     return {
         ...DOMAIN_CONFIG,
-        salt: ethers.id(topicId)
+        salt: ethers.id(topicId),
     };
 }
 
@@ -41,7 +41,7 @@ export function createVoteMessage(topicId) {
     }
 
     return {
-        topic: topicId
+        topic: topicId,
     };
 }
 
@@ -70,7 +70,7 @@ export async function signVoteMessage(wallet, topicId) {
         r: sig.r,
         s: sig.s,
         v: sig.v,
-        messageHash: ethers.TypedDataEncoder.hash(domain, voteTypes, message)
+        messageHash: ethers.TypedDataEncoder.hash(domain, voteTypes, message),
     };
 }
 
@@ -83,7 +83,7 @@ export function signatureToFieldElements(sig) {
     return {
         r: BigInt(sig.r).toString(),
         s: BigInt(sig.s).toString(),
-        v: sig.v.toString()
+        v: sig.v.toString(),
     };
 }
 

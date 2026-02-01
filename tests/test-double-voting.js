@@ -15,18 +15,18 @@ async function testDoubleVoting() {
     try {
         const votersPath = path.join(process.cwd(), FILE_PATHS.data.validVoters);
         const voters = readAndValidateJsonFile(votersPath, {
-            isArray: true
+            isArray: true,
         });
 
         const treePath = path.join(process.cwd(), FILE_PATHS.data.merkleTree);
         const treeData = readAndValidateJsonFile(treePath, {
-            requiredFields: ['root', 'tree', 'leaves']
+            requiredFields: ['root', 'tree', 'leaves'],
         });
 
         const vkey = readAndValidateJsonFile(
             path.join(process.cwd(), FILE_PATHS.build.verificationKey),
             {
-                requiredFields: ['vk_alpha_1', 'vk_beta_2', 'vk_gamma_2', 'vk_delta_2', 'IC']
+                requiredFields: ['vk_alpha_1', 'vk_beta_2', 'vk_gamma_2', 'vk_delta_2', 'IC'],
             }
         );
 
@@ -60,7 +60,7 @@ async function testDoubleVoting() {
             pathElements: merkleProof.siblings,
             pathIndices: merkleProof.pathIndices,
             sigR: sigFields1.r,
-            sigS: sigFields1.s
+            sigS: sigFields1.s,
         };
 
         const { proof: proof1, publicSignals: ps1 } = await snarkjs.groth16.fullProve(
@@ -104,7 +104,7 @@ async function testDoubleVoting() {
             pathElements: merkleProof.siblings,
             pathIndices: merkleProof.pathIndices,
             sigR: sigFields2.r,
-            sigS: sigFields2.s
+            sigS: sigFields2.s,
         };
 
         const { proof: proof2, publicSignals: ps2 } = await snarkjs.groth16.fullProve(
@@ -160,11 +160,11 @@ async function testDoubleVoting() {
 
 // Run test
 testDoubleVoting()
-    .then((passed) => {
+    .then(passed => {
         console.log('\n' + '='.repeat(DISPLAY_WIDTH.STANDARD));
         process.exit(passed ? 0 : 1);
     })
-    .catch((error) => {
+    .catch(error => {
         console.error('\n❌ Fatal error:', error.message);
         process.exit(1);
     });

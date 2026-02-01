@@ -49,7 +49,7 @@ export async function buildMerkleTree(addresses) {
     return {
         root: tree[TREE_DEPTH][0],
         tree,
-        leaves: paddedLeaves
+        leaves: paddedLeaves,
     };
 }
 
@@ -92,7 +92,7 @@ export function getMerkleProof(tree, leafIndex) {
 
     return {
         siblings,
-        pathIndices
+        pathIndices,
     };
 }
 
@@ -133,7 +133,7 @@ export function proofToCircuitInput(proof) {
 
     return {
         pathElements: proof.siblings,
-        pathIndices: proof.pathIndices
+        pathIndices: proof.pathIndices,
     };
 }
 

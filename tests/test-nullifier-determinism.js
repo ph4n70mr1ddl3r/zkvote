@@ -13,7 +13,7 @@ async function testNullifierDeterminism() {
     try {
         const votersPath = path.join(process.cwd(), FILE_PATHS.data.validVoters);
         const voters = readAndValidateJsonFile(votersPath, {
-            isArray: true
+            isArray: true,
         });
 
         const voter1 = voters[0];
@@ -113,11 +113,11 @@ async function testNullifierDeterminism() {
 
 // Run test
 testNullifierDeterminism()
-    .then((passed) => {
+    .then(passed => {
         console.log('\n' + '='.repeat(DISPLAY_WIDTH.STANDARD));
         process.exit(passed ? 0 : 1);
     })
-    .catch((error) => {
+    .catch(error => {
         console.error('\n❌ Fatal error:', error.message);
         process.exit(1);
     });

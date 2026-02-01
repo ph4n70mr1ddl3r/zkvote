@@ -101,11 +101,7 @@ export async function computeNullifier(sigR, sigS, topicIdHash) {
     }
 
     try {
-        return poseidonHashMany([
-            BigInt(sigR),
-            BigInt(sigS),
-            BigInt(topicIdHash)
-        ]);
+        return poseidonHashMany([BigInt(sigR), BigInt(sigS), BigInt(topicIdHash)]);
     } catch (error) {
         throw new Error(`Invalid signature or topic ID hash: ${error.message}`);
     }

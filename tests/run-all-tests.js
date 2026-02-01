@@ -12,23 +12,23 @@ const tests = [
     {
         name: 'Valid Voter Test',
         file: 'tests/test-valid-voter.js',
-        description: 'Valid voter can generate and verify proofs'
+        description: 'Valid voter can generate and verify proofs',
     },
     {
         name: 'Invalid Voter Test',
         file: 'tests/test-invalid-voter.js',
-        description: 'Invalid voter proofs are rejected'
+        description: 'Invalid voter proofs are rejected',
     },
     {
         name: 'Nullifier Determinism Test',
         file: 'tests/test-nullifier-determinism.js',
-        description: 'Nullifiers are deterministic and unique'
+        description: 'Nullifiers are deterministic and unique',
     },
     {
         name: 'Double Voting Prevention Test',
         file: 'tests/test-double-voting.js',
-        description: 'Duplicate votes are detected via nullifiers'
-    }
+        description: 'Duplicate votes are detected via nullifiers',
+    },
 ];
 
 async function runTest(test) {
@@ -106,7 +106,7 @@ async function runAllTests() {
     }
 }
 
-runAllTests().catch((error) => {
+runAllTests().catch(error => {
     console.error('\n❌ Fatal error running tests:', error.message);
     process.exit(1);
 });

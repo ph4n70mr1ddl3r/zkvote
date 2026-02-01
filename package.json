@@ -1,45 +1,45 @@
 {
-  "name": "zkvote",
-  "version": "1.0.0",
-  "description": "Zero-Knowledge Proof Voting System with Ethereum accounts and Merkle trees",
-  "main": "index.js",
-  "type": "module",
-  "scripts": {
-    "generate-accounts": "node scripts/generate-accounts.js",
-    "build-tree": "node scripts/build-merkle-tree.js",
-    "compile-circuits": "node scripts/compile-circuits.js",
-    "generate-proof": "node scripts/generate-proof.js",
-    "verify-proof": "node scripts/verify-proof.js",
-    "test": "node tests/run-all-tests.js",
-    "test:valid": "node tests/test-valid-voter.js",
-    "test:invalid": "node tests/test-invalid-voter.js",
-    "test:double-vote": "node tests/test-double-voting.js",
-    "test:nullifier": "node tests/test-nullifier-determinism.js",
-    "lint": "eslint . --ext .js",
-    "lint:fix": "eslint . --ext .js --fix",
-    "format": "prettier --write \"**/*.{js,json}\"",
-    "format:check": "prettier --check \"**/*.{js,json}\""
-  },
-  "keywords": [
-    "zero-knowledge",
-    "zkp",
-    "voting",
-    "ethereum",
-    "merkle-tree",
-    "circom",
-    "snarkjs"
-  ],
-  "author": "",
-  "license": "MIT",
-  "dependencies": {
-    "circomlib": "^2.0.5",
-    "circomlibjs": "^0.1.7",
-    "ethers": "^6.9.0",
-    "snarkjs": "^0.7.3"
-  },
-  "devDependencies": {
-    "circom_tester": "^0.0.19",
-    "eslint": "^8.56.0",
-    "prettier": "^3.1.1"
-  }
+    "name": "zkvote",
+    "version": "1.0.0",
+    "description": "Zero-Knowledge Proof Voting System with Ethereum accounts and Merkle trees",
+    "main": "index.js",
+    "type": "module",
+    "scripts": {
+        "generate-accounts": "node scripts/generate-accounts.js",
+        "build-tree": "node scripts/build-merkle-tree.js",
+        "compile-circuits": "node scripts/compile-circuits.js",
+        "generate-proof": "node scripts/generate-proof.js",
+        "verify-proof": "node scripts/verify-proof.js",
+        "test": "node tests/run-all-tests.js",
+        "test:valid": "node tests/test-valid-voter.js",
+        "test:invalid": "node tests/test-invalid-voter.js",
+        "test:double-vote": "node tests/test-double-voting.js",
+        "test:nullifier": "node tests/test-nullifier-determinism.js",
+        "lint": "eslint . --ext .js",
+        "lint:fix": "eslint . --ext .js --fix",
+        "format": "prettier --write \"**/*.{js,json}\"",
+        "format:check": "prettier --check \"**/*.{js,json}\""
+    },
+    "keywords": [
+        "zero-knowledge",
+        "zkp",
+        "voting",
+        "ethereum",
+        "merkle-tree",
+        "circom",
+        "snarkjs"
+    ],
+    "author": "",
+    "license": "MIT",
+    "dependencies": {
+        "circomlib": "^2.0.5",
+        "circomlibjs": "^0.1.7",
+        "ethers": "^6.9.0",
+        "snarkjs": "^0.7.3"
+    },
+    "devDependencies": {
+        "circom_tester": "^0.0.19",
+        "eslint": "^8.56.0",
+        "prettier": "^3.1.1"
+    }
 }

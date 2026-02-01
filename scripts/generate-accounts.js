@@ -31,7 +31,7 @@ function generateAccounts(count) {
         accounts.push({
             index: i,
             address: wallet.address,
-            privateKey: wallet.privateKey
+            privateKey: wallet.privateKey,
         });
     }
 

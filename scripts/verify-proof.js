@@ -22,7 +22,7 @@ async function verifyProof(proofPath) {
         }
 
         const proofData = readAndValidateJsonFile(proofPath, {
-            requiredFields: ['proof', 'publicSignals', 'metadata']
+            requiredFields: ['proof', 'publicSignals', 'metadata'],
         });
 
         if (!proofData.proof || !proofData.publicSignals) {
@@ -47,7 +47,7 @@ async function verifyProof(proofPath) {
         }
 
         const vkey = readAndValidateJsonFile(vkeyPath, {
-            requiredFields: ['vk_alpha_1', 'vk_beta_2', 'vk_gamma_2', 'vk_delta_2', 'IC']
+            requiredFields: ['vk_alpha_1', 'vk_beta_2', 'vk_gamma_2', 'vk_delta_2', 'IC'],
         });
 
         console.log('⚙️  Verifying proof...');
@@ -74,7 +74,7 @@ async function verifyProof(proofPath) {
             console.log('   1. The voter is in the valid voter set (Merkle tree)');
             console.log('   2. The vote is for the specified topic');
             console.log('   3. The nullifier prevents double voting');
-            console.log('   4. The voter\'s identity remains anonymous\n');
+            console.log("   4. The voter's identity remains anonymous\n");
 
             if (proofData.metadata.isInvalidVoter) {
                 console.log('⚠️  WARNING: This proof was generated with an invalid voter!');
@@ -86,7 +86,7 @@ async function verifyProof(proofPath) {
             console.log('\n⚠️  This proof does not verify. Possible reasons:');
             console.log('   1. Voter is not in the valid voter set');
             console.log('   2. Proof has been tampered with');
-            console.log('   3. Public signals don\'t match the proof');
+            console.log("   3. Public signals don't match the proof");
             console.log('   4. Wrong verification key\n');
 
             if (proofData.metadata.isInvalidVoter) {
@@ -106,9 +106,8 @@ async function verifyProof(proofPath) {
 // CLI interface
 const args = process.argv.slice(2);
 
-const proofPath = args.length === 0
-    ? path.join(process.cwd(), FILE_PATHS.build.latestProof)
-    : args[0].trim();
+const proofPath =
+    args.length === 0 ? path.join(process.cwd(), FILE_PATHS.build.latestProof) : args[0].trim();
 
 if (!proofPath || proofPath.length === 0) {
     console.error('Error: Proof path cannot be empty');
@@ -121,10 +120,10 @@ if (!path.isAbsolute(proofPath) && !fs.existsSync(path.resolve(proofPath))) {
 }
 
 verifyProof(proofPath)
-    .then((isValid) => {
+    .then(isValid => {
         process.exit(isValid ? 0 : 1);
     })
-    .catch((error) => {
+    .catch(error => {
         console.error('\n❌ Error verifying proof:');
         console.error(error.message);
         process.exit(1);

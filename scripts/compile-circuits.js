@@ -14,34 +14,40 @@ const execAsync = promisify(exec);
 async function downloadFile(url, filepath) {
     return new Promise((resolve, reject) => {
         const file = fs.createWriteStream(filepath);
-        https.get(url, (response) => {
-            if (response.statusCode !== 200) {
-                file.close();
-                fs.unlink(filepath, () => {});
-                reject(new Error(`Failed to download file: HTTP ${response.statusCode}`));
-                return;
-            }
-            response.pipe(file);
-            file.on('finish', () => {
-                file.close();
-                const stats = fs.statSync(filepath);
-                if (stats.size < PTAU_MIN_FILE_SIZE) {
-                    fs.unlinkSync(filepath);
-                    reject(new Error('Downloaded file is too small, likely an error response'));
-                } else {
-                    resolve();
+        https
+            .get(url, response => {
+                if (response.statusCode !== 200) {
+                    file.close();
+                    fs.unlink(filepath, () => {});
+                    reject(new Error(`Failed to download file: HTTP ${response.statusCode}`));
+                    return;
                 }
+                response.pipe(file);
+                file.on('finish', () => {
+                    file.close();
+                    const stats = fs.statSync(filepath);
+                    if (stats.size < PTAU_MIN_FILE_SIZE) {
+                        fs.unlinkSync(filepath);
+                        reject(new Error('Downloaded file is too small, likely an error response'));
+                    } else {
+                        resolve();
+                    }
+                });
+            })
+            .on('error', err => {
+                file.close();
+                fs.unlink(filepath, unlinkErr => {
+                    if (unlinkErr) {
+                        reject(
+                            new Error(
+                                `${err.message} (also failed to cleanup: ${unlinkErr.message})`
+                            )
+                        );
+                    } else {
+                        reject(err);
+                    }
+                });
             });
-        }).on('error', (err) => {
-            file.close();
-            fs.unlink(filepath, (unlinkErr) => {
-                if (unlinkErr) {
-                    reject(new Error(`${err.message} (also failed to cleanup: ${unlinkErr.message})`));
-                } else {
-                    reject(err);
-                }
-            });
-        });
     });
 }
 
@@ -75,7 +81,11 @@ async function main() {
         fs.mkdirSync(buildDir, { recursive: true });
     }
 
-    const circuitPath = path.join(process.cwd(), 'circuits', `${CIRCUIT_CONFIG.CIRCUIT_NAME}.circom`);
+    const circuitPath = path.join(
+        process.cwd(),
+        'circuits',
+        `${CIRCUIT_CONFIG.CIRCUIT_NAME}.circom`
+    );
     const buildPath = path.join(buildDir, CIRCUIT_CONFIG.CIRCUIT_NAME);
 
     // Check if circom is installed
@@ -83,7 +93,9 @@ async function main() {
         await execAsync('circom --version');
     } catch (error) {
         console.error('❌ Circom not found!');
-        console.error('Please install Circom: https://docs.circom.io/getting-started/installation/');
+        console.error(
+            'Please install Circom: https://docs.circom.io/getting-started/installation/'
+        );
         console.error('\nQuick install:');
         console.error('  git clone https://github.com/iden3/circom.git');
         console.error('  cd circom');
@@ -98,7 +110,10 @@ async function main() {
         'Compiling circuit'
     );
 
-    const ptauPath = path.join(buildDir, `powersOfTau28_hez_final_${CIRCUIT_CONFIG.PTAU_SIZE}.ptau`);
+    const ptauPath = path.join(
+        buildDir,
+        `powersOfTau28_hez_final_${CIRCUIT_CONFIG.PTAU_SIZE}.ptau`
+    );
     if (!fs.existsSync(ptauPath)) {
         console.log(`\n📥 Downloading powers of tau (size ${CIRCUIT_CONFIG.PTAU_SIZE})...`);
         const ptauUrl = `https://storage.googleapis.com/zkevm/ptau/powersOfTau28_hez_final_${CIRCUIT_CONFIG.PTAU_SIZE}.ptau`;
@@ -144,7 +159,7 @@ async function main() {
     }
 }
 
-main().catch((error) => {
+main().catch(error => {
     console.error('\n❌ Compilation failed:', error.message);
     process.exit(1);
 });

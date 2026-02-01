@@ -17,7 +17,7 @@ async function main() {
         }
 
         const validVoters = readAndValidateJsonFile(validVotersPath, {
-            isArray: true
+            isArray: true,
         });
         console.log(`📋 Loaded ${validVoters.length} valid voter addresses`);
 
@@ -37,7 +37,7 @@ async function main() {
             depth: TREE_DEPTH,
             leafCount: validVoters.length,
             tree: merkleTree.tree,
-            leaves: merkleTree.leaves
+            leaves: merkleTree.leaves,
         };
 
         fs.writeFileSync(treePath, JSON.stringify(treeData, null, 2));
@@ -45,7 +45,9 @@ async function main() {
         console.log('\n✅ Merkle tree built successfully!');
         console.log(`   Tree depth: ${TREE_DEPTH}`);
         console.log(`   Leaf count: ${validVoters.length}`);
-        console.log(`   Total nodes: ${merkleTree.tree.reduce((sum, level) => sum + level.length, 0)}`);
+        console.log(
+            `   Total nodes: ${merkleTree.tree.reduce((sum, level) => sum + level.length, 0)}`
+        );
         console.log(`   Merkle root: ${merkleTree.root}`);
         console.log(`   Saved to: ${treePath}\n`);
 

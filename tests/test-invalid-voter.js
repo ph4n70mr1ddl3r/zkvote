@@ -14,12 +14,12 @@ async function testInvalidVoter() {
     try {
         const invalidVotersPath = path.join(process.cwd(), FILE_PATHS.data.invalidVoters);
         const invalidVoters = readAndValidateJsonFile(invalidVotersPath, {
-            isArray: true
+            isArray: true,
         });
 
         const treePath = path.join(process.cwd(), FILE_PATHS.data.merkleTree);
         const treeData = readAndValidateJsonFile(treePath, {
-            requiredFields: ['root', 'tree', 'leaves']
+            requiredFields: ['root', 'tree', 'leaves'],
         });
 
         const voterIndex = 0;
@@ -41,7 +41,7 @@ async function testInvalidVoter() {
 
         const fakeMerkleProof = {
             siblings: Array(TREE_DEPTH).fill(MERKLE_PADDING_VALUE),
-            pathIndices: Array(TREE_DEPTH).fill(0)
+            pathIndices: Array(TREE_DEPTH).fill(0),
         };
 
         const input = {
@@ -52,7 +52,7 @@ async function testInvalidVoter() {
             pathElements: fakeMerkleProof.siblings,
             pathIndices: fakeMerkleProof.pathIndices,
             sigR: sigFields.r,
-            sigS: sigFields.s
+            sigS: sigFields.s,
         };
 
         console.log('⚠️  Note: Using fake Merkle proof (voter not in tree)');
@@ -80,7 +80,7 @@ async function testInvalidVoter() {
         const vkey = readAndValidateJsonFile(
             path.join(process.cwd(), FILE_PATHS.build.verificationKey),
             {
-                requiredFields: ['vk_alpha_1', 'vk_beta_2', 'vk_gamma_2', 'vk_delta_2', 'IC']
+                requiredFields: ['vk_alpha_1', 'vk_beta_2', 'vk_gamma_2', 'vk_delta_2', 'IC'],
             }
         );
 
@@ -107,11 +107,11 @@ async function testInvalidVoter() {
 
 // Run test
 testInvalidVoter()
-    .then((passed) => {
+    .then(passed => {
         console.log('\n' + '='.repeat(DISPLAY_WIDTH.STANDARD));
         process.exit(passed ? 0 : 1);
     })
-    .catch((error) => {
+    .catch(error => {
         console.error('\n❌ Fatal error:', error.message);
         process.exit(1);
     });
