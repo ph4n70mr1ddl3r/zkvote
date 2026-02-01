@@ -4,7 +4,7 @@ import { ethers } from 'ethers';
 import * as snarkjs from 'snarkjs';
 import { signVoteMessage, signatureToFieldElements } from '../utils/eip712.js';
 import { getMerkleProof, proofToCircuitInput } from '../utils/merkle-helper.js';
-import { addressToFieldElement, poseidonHashMany } from '../utils/poseidon.js';
+import { addressToFieldElement, computeNullifier } from '../utils/poseidon.js';
 import { DEFAULT_TOPIC_ID, FILE_PATHS, MAX_VOTE_MESSAGE_LENGTH, MERKLE_PADDING_VALUE, TREE_DEPTH, PUBLIC_SIGNAL } from '../utils/constants.js';
 import { readAndValidateJsonFile } from '../utils/json-helper.js';
 
@@ -128,12 +128,7 @@ async function generateProof(voterIndex, voteMessage, useInvalid = false) {
     console.log('✅ Proof generated successfully!\n');
 
     // Compute nullifier from signature
-    const nullifierInputs = [
-        BigInt(sigFields.r),
-        BigInt(sigFields.s),
-        BigInt(topicIdHash)
-    ];
-    const nullifier = await poseidonHashMany(nullifierInputs);
+    const nullifier = await computeNullifier(sigFields.r, sigFields.s, topicIdHash);
 
     console.log('📊 Proof details:');
     console.log(`   Nullifier: ${publicSignals[PUBLIC_SIGNAL.NULLIFIER]}`);

@@ -7,6 +7,10 @@ import { readAndValidateJsonFile } from '../utils/json-helper.js';
 /**
  * Generate Ethereum accounts for testing the ZKP voting system
  * Creates NUM_ACCOUNTS valid voters and NUM_ACCOUNTS invalid voters
+ *
+ * SECURITY WARNING: These accounts are stored with private keys in JSON files.
+ * DO NOT use these accounts in production. They are for testing purposes only.
+ * Private keys are stored in plain text - never commit or share these files.
  */
 
 function generateAccounts(count) {

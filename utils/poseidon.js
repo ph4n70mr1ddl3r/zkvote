@@ -56,3 +56,22 @@ export function addressToFieldElement(address) {
     const addressBigInt = BigInt(address);
     return addressBigInt.toString();
 }
+
+/**
+ * Compute nullifier from signature and topic ID
+ * This is used to prevent double voting
+ */
+export async function computeNullifier(sigR, sigS, topicIdHash) {
+    if (!sigR || !sigS) {
+        throw new Error('Signature components (r and s) are required');
+    }
+    if (!topicIdHash) {
+        throw new Error('Topic ID hash is required');
+    }
+
+    return await poseidonHashMany([
+        BigInt(sigR),
+        BigInt(sigS),
+        BigInt(topicIdHash)
+    ]);
+}

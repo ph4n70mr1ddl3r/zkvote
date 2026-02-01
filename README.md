@@ -78,6 +78,8 @@ npm install
 
 ## Quick Start
 
+**SECURITY WARNING**: This project generates and stores private keys in JSON files for testing purposes only. Never use these keys in production or commit them to a public repository.
+
 ### 1. Generate Accounts
 
 ```bash

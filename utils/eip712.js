@@ -35,6 +35,10 @@ export function createVoteMessage(topicId) {
  * Returns deterministic signature components
  */
 export async function signVoteMessage(wallet, topicId) {
+    if (!topicId || typeof topicId !== 'string' || topicId.trim().length === 0) {
+        throw new Error('Topic ID must be a non-empty string');
+    }
+
     const domain = createDomain(topicId);
     const message = createVoteMessage(topicId);
 

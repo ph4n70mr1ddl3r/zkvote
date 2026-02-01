@@ -41,16 +41,10 @@ template Vote(levels) {
     nullifierHasher.inputs[2] <== topicId;
     
     nullifier <== nullifierHasher.out;
-    
-    // 3. Verify signature components and message hash are non-zero
-    signal sigRNonZero;
-    signal sigSNonZero;
-    sigRNonZero <== sigR * sigR;
-    sigSNonZero <== sigS * sigS;
 
-    // Ensure message hash is included in the proof
-    signal messageHashSquared;
-    messageHashSquared <== messageHash * messageHash;
+    // Note: Full ECDSA signature verification is not implemented here
+    // For production use, implement proper ECDSA verification circuit
+    // or validate signatures outside of the ZK proof
 }
 
 component main {public [merkleRoot, topicId, messageHash]} = Vote(7);

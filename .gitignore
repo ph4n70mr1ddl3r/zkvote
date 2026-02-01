@@ -1,4 +1,7 @@
+# Dependencies
 node_modules/
+
+# Build artifacts
 build/
 *.ptau
 *.r1cs
@@ -9,8 +12,20 @@ build/
 *.json.proof
 *.json.public
 verification_key.json
-data/merkle-tree.json
+
+# Compiled circuit JS
 circuits/merkle-proof_js/
 circuits/vote_js/
-.DS_Store
+
+# Data files (may contain sensitive information)
+data/merkle-tree.json
+data/valid-voters.json
+data/invalid-voters.json
+
+# Logs
 *.log
+
+# OS files
+.DS_Store
+Thumbs.db
+

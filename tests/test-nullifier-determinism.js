@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { ethers } from 'ethers';
 import { signVoteMessage, signatureToFieldElements } from '../utils/eip712.js';
-import { poseidonHashMany } from '../utils/poseidon.js';
+import { computeNullifier } from '../utils/poseidon.js';
 import { FILE_PATHS, DISPLAY_WIDTH } from '../utils/constants.js';
 import { readAndValidateJsonFile } from '../utils/json-helper.js';
 
@@ -40,19 +40,11 @@ async function testNullifierDeterminism() {
         const fields1a = signatureToFieldElements(sig1a);
         const fields1b = signatureToFieldElements(sig1b);
 
-        const topicHash1 = BigInt(ethers.id(topic1));
+        const topicHash1 = ethers.id(topic1);
 
-        const nullifier1a = await poseidonHashMany([
-            BigInt(fields1a.r),
-            BigInt(fields1a.s),
-            topicHash1
-        ]);
+        const nullifier1a = await computeNullifier(fields1a.r, fields1a.s, topicHash1);
 
-        const nullifier1b = await poseidonHashMany([
-            BigInt(fields1b.r),
-            BigInt(fields1b.s),
-            topicHash1
-        ]);
+        const nullifier1b = await computeNullifier(fields1b.r, fields1b.s, topicHash1);
 
         console.log(`  Nullifier 1a: ${nullifier1a}`);
         console.log(`  Nullifier 1b: ${nullifier1b}`);
@@ -74,13 +66,9 @@ async function testNullifierDeterminism() {
         const sig2 = await signVoteMessage(wallet1, topic2);
         const fields2 = signatureToFieldElements(sig2);
 
-        const topicHash2 = BigInt(ethers.id(topic2));
+        const topicHash2 = ethers.id(topic2);
 
-        const nullifier2 = await poseidonHashMany([
-            BigInt(fields2.r),
-            BigInt(fields2.s),
-            topicHash2
-        ]);
+        const nullifier2 = await computeNullifier(fields2.r, fields2.s, topicHash2);
 
         console.log(`  Nullifier (topic A): ${nullifier1a}`);
         console.log(`  Nullifier (topic B): ${nullifier2}`);
@@ -100,11 +88,7 @@ async function testNullifierDeterminism() {
         const sig3 = await signVoteMessage(wallet2, topic1);
         const fields3 = signatureToFieldElements(sig3);
 
-        const nullifier3 = await poseidonHashMany([
-            BigInt(fields3.r),
-            BigInt(fields3.s),
-            topicHash1
-        ]);
+        const nullifier3 = await computeNullifier(fields3.r, fields3.s, topicHash1);
 
         console.log(`  Nullifier (voter 1): ${nullifier1a}`);
         console.log(`  Nullifier (voter 2): ${nullifier3}`);

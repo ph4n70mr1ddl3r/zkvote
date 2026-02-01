@@ -4,7 +4,7 @@ import { ethers } from 'ethers';
 import * as snarkjs from 'snarkjs';
 import { signVoteMessage, signatureToFieldElements } from '../utils/eip712.js';
 import { getMerkleProof } from '../utils/merkle-helper.js';
-import { addressToFieldElement, poseidonHashMany } from '../utils/poseidon.js';
+import { addressToFieldElement, computeNullifier } from '../utils/poseidon.js';
 import { FILE_PATHS, PUBLIC_SIGNAL, DISPLAY_WIDTH } from '../utils/constants.js';
 import { readAndValidateJsonFile } from '../utils/json-helper.js';
 
@@ -86,17 +86,9 @@ async function testValidVoter() {
         const sigFields2 = signatureToFieldElements(sig2);
 
         // Compute nullifiers
-        const nullifier1 = await poseidonHashMany([
-            BigInt(sigFields1.r),
-            BigInt(sigFields1.s),
-            BigInt(ethers.id(topicId))
-        ]);
+        const nullifier1 = await computeNullifier(sigFields1.r, sigFields1.s, ethers.id(topicId));
 
-        const nullifier2 = await poseidonHashMany([
-            BigInt(sigFields2.r),
-            BigInt(sigFields2.s),
-            BigInt(ethers.id(topicId))
-        ]);
+        const nullifier2 = await computeNullifier(sigFields2.r, sigFields2.s, ethers.id(topicId));
 
         console.log(`   Nullifier 1: ${nullifier1}`);
         console.log(`   Nullifier 2: ${nullifier2}`);

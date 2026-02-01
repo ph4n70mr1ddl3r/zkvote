@@ -4,7 +4,7 @@ import { ethers } from 'ethers';
 import * as snarkjs from 'snarkjs';
 import { signVoteMessage, signatureToFieldElements } from '../utils/eip712.js';
 import { getMerkleProof } from '../utils/merkle-helper.js';
-import { addressToFieldElement, poseidonHashMany } from '../utils/poseidon.js';
+import { addressToFieldElement } from '../utils/poseidon.js';
 import { FILE_PATHS, PUBLIC_SIGNAL, DISPLAY_WIDTH } from '../utils/constants.js';
 import { readAndValidateJsonFile } from '../utils/json-helper.js';
 
