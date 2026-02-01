@@ -7,19 +7,29 @@ import { TREE_DEPTH, MERKLE_PADDING_VALUE } from './constants.js';
 
 /**
  * Build a Merkle tree from addresses
+ * @param {Array<string>} addresses - Array of Ethereum addresses
+ * @returns {Promise<Object>} Merkle tree object with root, tree structure, and leaves
+ * @throws {Error} If addresses array is empty or contains invalid addresses
  */
 export async function buildMerkleTree(addresses) {
-    // Convert addresses to field elements
+    if (!Array.isArray(addresses)) {
+        throw new Error('Addresses must be an array');
+    }
+    if (addresses.length === 0) {
+        throw new Error('Cannot build Merkle tree from empty array');
+    }
+    if (addresses.length > 2 ** TREE_DEPTH) {
+        throw new Error(`Too many addresses (${addresses.length}) for tree depth ${TREE_DEPTH}`);
+    }
+
     const leaves = addresses.map(addr => addressToFieldElement(addr));
 
-    // Pad to power of 2
     const paddedLeaves = [...leaves];
     const targetSize = 2 ** TREE_DEPTH;
     while (paddedLeaves.length < targetSize) {
         paddedLeaves.push(MERKLE_PADDING_VALUE);
     }
 
-    // Build tree level by level
     const tree = [paddedLeaves];
 
     for (let level = 0; level < TREE_DEPTH; level++) {
@@ -45,8 +55,22 @@ export async function buildMerkleTree(addresses) {
 
 /**
  * Generate Merkle proof for a specific leaf index
+ * @param {Array<Array<string>>} tree - Merkle tree structure
+ * @param {number} leafIndex - Index of the leaf to generate proof for
+ * @returns {Object} Merkle proof with siblings and path indices
+ * @throws {Error} If tree structure is invalid or leafIndex is out of bounds
  */
 export function getMerkleProof(tree, leafIndex) {
+    if (!Array.isArray(tree) || tree.length === 0) {
+        throw new Error('Invalid tree structure: must be a non-empty array');
+    }
+    if (!Number.isInteger(leafIndex) || leafIndex < 0) {
+        throw new Error(`Invalid leaf index: ${leafIndex}`);
+    }
+    if (leafIndex >= tree[0].length) {
+        throw new Error(`Leaf index ${leafIndex} out of bounds (0-${tree[0].length - 1})`);
+    }
+
     const siblings = [];
     const pathIndices = [];
 
@@ -55,6 +79,10 @@ export function getMerkleProof(tree, leafIndex) {
     for (let level = 0; level < TREE_DEPTH; level++) {
         const isRight = index % 2 === 1;
         const siblingIndex = isRight ? index - 1 : index + 1;
+
+        if (siblingIndex < 0 || siblingIndex >= tree[level].length) {
+            throw new Error(`Invalid sibling index at level ${level}`);
+        }
 
         siblings.push(tree[level][siblingIndex]);
         pathIndices.push(isRight ? 1 : 0);
@@ -91,8 +119,18 @@ export async function verifyMerkleProof(leaf, proof, root) {
 
 /**
  * Convert Merkle proof to circuit input format
+ * @param {Object} proof - Merkle proof object with siblings and pathIndices
+ * @returns {Object} Circuit input format with pathElements and pathIndices
+ * @throws {Error} If proof structure is invalid
  */
 export function proofToCircuitInput(proof) {
+    if (!proof || typeof proof !== 'object') {
+        throw new Error('Invalid proof: must be an object');
+    }
+    if (!Array.isArray(proof.siblings) || !Array.isArray(proof.pathIndices)) {
+        throw new Error('Invalid proof: missing siblings or pathIndices arrays');
+    }
+
     return {
         pathElements: proof.siblings,
         pathIndices: proof.pathIndices

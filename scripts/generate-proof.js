@@ -23,14 +23,23 @@ function validateVoteMessage(message) {
     if (message.length > MAX_VOTE_MESSAGE_LENGTH) {
         throw new Error(`Vote message exceeds maximum length of ${MAX_VOTE_MESSAGE_LENGTH} characters`);
     }
+    if (!/^[\x20-\x7E]*$/.test(message)) {
+        throw new Error('Vote message contains invalid characters (ASCII printable characters only)');
+    }
 }
 
 function validateVoterIndex(index, maxIndex) {
-    if (!Number.isInteger(index) || index < 0) {
-        throw new Error(`Voter index must be a non-negative integer`);
+    if (!Number.isInteger(index)) {
+        throw new Error(`Voter index must be an integer, got ${typeof index}`);
+    }
+    if (index < 0) {
+        throw new Error(`Voter index must be non-negative, got ${index}`);
+    }
+    if (maxIndex < 0) {
+        throw new Error(`Invalid max index: ${maxIndex}`);
     }
     if (index > maxIndex) {
-        throw new Error(`Voter index ${index} exceeds available voters (${maxIndex})`);
+        throw new Error(`Voter index ${index} exceeds available voters (0-${maxIndex})`);
     }
 }
 

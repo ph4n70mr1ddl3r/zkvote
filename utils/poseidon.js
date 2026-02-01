@@ -87,13 +87,16 @@ export function addressToFieldElement(address) {
  * @param {string|number} sigS - Signature s component
  * @param {string|number} topicIdHash - Hashed topic ID
  * @returns {Promise<string>} Nullifier hash
- * @throws {Error} If required parameters are missing
+ * @throws {Error} If required parameters are missing or invalid
  */
 export async function computeNullifier(sigR, sigS, topicIdHash) {
-    if (!sigR || !sigS) {
-        throw new Error('Signature components (r and s) are required');
+    if (sigR === undefined || sigR === null || sigR === '') {
+        throw new Error('Signature component r is required');
     }
-    if (!topicIdHash) {
+    if (sigS === undefined || sigS === null || sigS === '') {
+        throw new Error('Signature component s is required');
+    }
+    if (topicIdHash === undefined || topicIdHash === null || topicIdHash === '') {
         throw new Error('Topic ID hash is required');
     }
 

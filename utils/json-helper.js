@@ -9,6 +9,9 @@ import path from 'path';
  * @throws {Error} If file doesn't exist, cannot be parsed, or fails validation
  */
 export function readAndValidateJsonFile(filePath, schema) {
+    if (!filePath || typeof filePath !== 'string') {
+        throw new Error('File path must be a non-empty string');
+    }
     if (!fs.existsSync(filePath)) {
         throw new Error(`File not found: ${filePath}`);
     }
@@ -35,6 +38,9 @@ export function readAndValidateJsonFile(filePath, schema) {
  */
 function validateSchema(data, schema) {
     if (schema.requiredFields) {
+        if (!Array.isArray(schema.requiredFields)) {
+            throw new Error('Schema requiredFields must be an array');
+        }
         for (const field of schema.requiredFields) {
             if (!(field in data)) {
                 throw new Error(`Missing required field: ${field}`);
@@ -48,5 +54,9 @@ function validateSchema(data, schema) {
 
     if (schema.objectType && typeof data !== 'object') {
         throw new Error(`Expected data to be an object, got ${typeof data}`);
+    }
+
+    if (schema.nonEmpty && Array.isArray(data) && data.length === 0) {
+        throw new Error('Expected data to be non-empty array');
     }
 }

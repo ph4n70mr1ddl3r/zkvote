@@ -62,7 +62,7 @@ async function runCommand(command, description) {
         if (error.stderr) {
             console.error('Error output:', error.stderr);
         }
-        throw error;
+        throw new Error(`Failed to ${description}: ${error.message}`);
     }
 }
 

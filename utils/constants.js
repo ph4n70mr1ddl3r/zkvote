@@ -6,6 +6,8 @@ export const PTAU_MIN_FILE_SIZE = 1000000;
 
 export const DEFAULT_TOPIC_ID = 'vote-topic-2024';
 
+export const ALLOWED_VOTE_MESSAGE_PATTERN = /^[\x20-\x7E]*$/;
+
 export const DOMAIN_CONFIG = {
     name: 'ZKVoting',
     version: '1',
@@ -42,6 +44,13 @@ export const CIRCUIT_CONFIG = {
 };
 
 export const NUM_ACCOUNTS = 100;
+
+export const PUBLIC_SIGNAL_INDEX = {
+    NULLIFIER: 0,
+    MERKLE_ROOT: 1,
+    TOPIC_ID: 2,
+    MESSAGE_HASH: 3
+};
 
 export const PUBLIC_SIGNAL = {
     NULLIFIER: 0,

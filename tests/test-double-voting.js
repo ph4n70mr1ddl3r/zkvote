@@ -36,14 +36,12 @@ async function testDoubleVoting() {
 
         console.log(`Testing with voter: ${voter.address}\n`);
 
-        // Simulate nullifier registry (tracks used nullifiers)
         const nullifierRegistry = new Set();
 
         const topicId = 'important-vote';
         const voteMessage1 = 'Vote for Option A';
         const voteMessage2 = 'Vote for Option B';
 
-        // First vote
         console.log('📋 First Vote:');
         console.log(`   Message: "${voteMessage1}"`);
         console.log(`   Topic: ${topicId}`);

@@ -23,14 +23,12 @@ async function testValidVoter() {
             requiredFields: ['root', 'tree', 'leaves']
         });
 
-        // Test with first voter
         const voterIndex = 0;
         const voter = voters[voterIndex];
         const wallet = new ethers.Wallet(voter.privateKey);
 
         console.log(`✓ Testing with voter ${voterIndex}: ${voter.address}`);
 
-        // Generate first proof
         const topicId = 'test-topic';
         const voteMessage = 'Vote for Proposal A';
 

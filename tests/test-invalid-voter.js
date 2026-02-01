@@ -22,7 +22,6 @@ async function testInvalidVoter() {
             requiredFields: ['root', 'tree', 'leaves']
         });
 
-        // Test with first invalid voter
         const voterIndex = 0;
         const voter = invalidVoters[voterIndex];
         const wallet = new ethers.Wallet(voter.privateKey);
@@ -30,7 +29,6 @@ async function testInvalidVoter() {
         console.log(`✓ Testing with INVALID voter ${voterIndex}: ${voter.address}`);
         console.log('  (This address is NOT in the Merkle tree)\n');
 
-        // Generate signature
         const topicId = 'test-topic';
         const voteMessage = 'Vote for Proposal B';
 

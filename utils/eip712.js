@@ -10,8 +10,13 @@ import { DOMAIN_CONFIG, VOTE_TYPES } from './constants.js';
  * Create EIP-712 domain for the voting system
  * @param {string} topicId - Unique identifier for the voting topic
  * @returns {Object} EIP-712 domain object
+ * @throws {Error} If topicId is invalid
  */
 export function createDomain(topicId) {
+    if (!topicId || typeof topicId !== 'string') {
+        throw new Error('Topic ID must be a non-empty string');
+    }
+
     return {
         ...DOMAIN_CONFIG,
         salt: ethers.id(topicId)
@@ -28,8 +33,13 @@ export const voteTypes = VOTE_TYPES;
  * Create vote message structure
  * @param {string} topicId - Unique identifier for the voting topic
  * @returns {Object} Vote message object
+ * @throws {Error} If topicId is invalid
  */
 export function createVoteMessage(topicId) {
+    if (!topicId || typeof topicId !== 'string') {
+        throw new Error('Topic ID must be a non-empty string');
+    }
+
     return {
         topic: topicId
     };
@@ -82,10 +92,22 @@ export function signatureToFieldElements(sig) {
  * @param {string} topicId - Unique identifier for the voting topic
  * @param {string} signature - Signature to verify
  * @returns {string} Recovered Ethereum address
+ * @throws {Error} If parameters are invalid or signature is malformed
  */
 export function recoverSigner(topicId, signature) {
+    if (!topicId || typeof topicId !== 'string') {
+        throw new Error('Topic ID must be a non-empty string');
+    }
+    if (!signature || typeof signature !== 'string') {
+        throw new Error('Signature must be a non-empty string');
+    }
+
     const domain = createDomain(topicId);
     const message = createVoteMessage(topicId);
 
-    return ethers.verifyTypedData(domain, voteTypes, message, signature);
+    try {
+        return ethers.verifyTypedData(domain, voteTypes, message, signature);
+    } catch (error) {
+        throw new Error(`Failed to recover signer: ${error.message}`);
+    }
 }
