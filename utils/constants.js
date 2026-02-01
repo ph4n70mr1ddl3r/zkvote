@@ -2,13 +2,15 @@ export const TREE_DEPTH = 7;
 
 export const MERKLE_PADDING_VALUE = '0';
 
+export const PTAU_MIN_FILE_SIZE = 1000000;
+
 export const DEFAULT_TOPIC_ID = 'vote-topic-2024';
 
 export const DOMAIN_CONFIG = {
     name: 'ZKVoting',
     version: '1',
-    chainId: 1,
-    verifyingContract: '0x0000000000000000000000000000000000000000'
+    chainId: parseInt(process.env.CHAIN_ID || '1'),
+    verifyingContract: process.env.VERIFYING_CONTRACT || '0x0000000000000000000000000000000000000000'
 };
 
 export const VOTE_TYPES = {

@@ -12,13 +12,14 @@ import { readAndValidateJsonFile } from '../utils/json-helper.js';
 async function verifyProof(proofPath) {
     console.log('🔍 Verifying ZK proof...\n');
 
-    if (!fs.existsSync(proofPath)) {
-        throw new Error(`Proof file not found: ${proofPath}`);
-    }
+    try {
+        if (!fs.existsSync(proofPath)) {
+            throw new Error(`Proof file not found: ${proofPath}`);
+        }
 
-    const proofData = readAndValidateJsonFile(proofPath, {
-        requiredFields: ['proof', 'publicSignals', 'metadata']
-    });
+        const proofData = readAndValidateJsonFile(proofPath, {
+            requiredFields: ['proof', 'publicSignals', 'metadata']
+        });
     console.log('📋 Proof metadata:');
     console.log(`   Voter: ${proofData.metadata.voterAddress}`);
     console.log(`   Topic: ${proofData.metadata.topicId}`);
@@ -81,9 +82,13 @@ async function verifyProof(proofPath) {
         }
     }
 
-    console.log('='.repeat(60) + '\n');
+        console.log('='.repeat(60) + '\n');
 
-    return isValid;
+        return isValid;
+    } catch (error) {
+        console.error('❌ Error in verifyProof:', error.message);
+        throw error;
+    }
 }
 
 // CLI interface

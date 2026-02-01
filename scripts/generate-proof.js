@@ -37,20 +37,20 @@ function validateVoterIndex(index, maxIndex) {
 async function generateProof(voterIndex, voteMessage, useInvalid = false) {
     console.log('🔐 Generating ZK proof for vote...\n');
 
-    validateVoteMessage(voteMessage);
+    try {
+        validateVoteMessage(voteMessage);
 
-    const voterType = useInvalid ? 'invalid-voters' : 'valid-voters';
-    const votersPath = path.join(process.cwd(), FILE_PATHS.data[voterType === 'valid-voters' ? 'validVoters' : 'invalidVoters']);
+        const votersPath = path.join(process.cwd(), useInvalid ? FILE_PATHS.data.invalidVoters : FILE_PATHS.data.validVoters);
 
-    if (!fs.existsSync(votersPath)) {
-        throw new Error(`Voters file not found: ${votersPath}`);
-    }
+        if (!fs.existsSync(votersPath)) {
+            throw new Error(`Voters file not found: ${votersPath}`);
+        }
 
-    const voters = readAndValidateJsonFile(votersPath, {
-        isArray: true
-    });
+        const voters = readAndValidateJsonFile(votersPath, {
+            isArray: true
+        });
 
-    validateVoterIndex(voterIndex, voters.length - 1);
+        validateVoterIndex(voterIndex, voters.length - 1);
 
     const voter = voters[voterIndex];
     console.log(`📋 Voter: ${voter.address} (index ${voterIndex})`);
@@ -156,12 +156,16 @@ async function generateProof(voterIndex, voteMessage, useInvalid = false) {
         }
     };
 
-    const proofPath = path.join(process.cwd(), FILE_PATHS.build.latestProof);
-    fs.writeFileSync(proofPath, JSON.stringify(proofData, null, 2));
+        const proofPath = path.join(process.cwd(), FILE_PATHS.build.latestProof);
+        fs.writeFileSync(proofPath, JSON.stringify(proofData, null, 2));
 
-    console.log(`💾 Proof saved to: ${proofPath}`);
+        console.log(`💾 Proof saved to: ${proofPath}`);
 
-    return proofData;
+        return proofData;
+    } catch (error) {
+        console.error('❌ Error in generateProof:', error.message);
+        throw error;
+    }
 }
 
 // CLI interface

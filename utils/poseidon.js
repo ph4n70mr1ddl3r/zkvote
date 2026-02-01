@@ -12,8 +12,6 @@ export async function getPoseidon() {
 export function resetPoseidonInstance() {
     poseidonInstance = null;
 }
-    return poseidonInstance;
-}
 
 /**
  * Hash a single value using Poseidon

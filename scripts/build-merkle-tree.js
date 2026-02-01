@@ -23,9 +23,12 @@ async function main() {
     // Extract addresses
     const addresses = validVoters.map(v => v.address);
 
-    // Build tree
     console.log('🔨 Building Merkle tree...');
     const merkleTree = await buildMerkleTree(addresses);
+
+    if (!merkleTree.root || merkleTree.root === '0') {
+        throw new Error('Invalid Merkle root generated');
+    }
 
     const treePath = path.join(process.cwd(), FILE_PATHS.data.merkleTree);
     const treeData = {

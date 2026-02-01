@@ -38,30 +38,34 @@ function generateAccounts(count) {
 async function main() {
     console.log('🔑 Generating Ethereum accounts...\n');
 
-    // Create data directory if it doesn't exist
-    const dataDir = path.join(process.cwd(), 'data');
-    if (!fs.existsSync(dataDir)) {
-        fs.mkdirSync(dataDir, { recursive: true });
+    try {
+        const dataDir = path.join(process.cwd(), 'data');
+        if (!fs.existsSync(dataDir)) {
+            fs.mkdirSync(dataDir, { recursive: true });
+        }
+
+        console.log(`Generating ${NUM_ACCOUNTS} valid voter accounts...`);
+        const validVoters = generateAccounts(NUM_ACCOUNTS);
+        const validVotersPath = path.join(process.cwd(), FILE_PATHS.data.validVoters);
+        fs.writeFileSync(validVotersPath, JSON.stringify(validVoters, null, 2));
+        console.log(`✅ Valid voters saved to: ${validVotersPath}`);
+        console.log(`   First address: ${validVoters[0].address}`);
+        console.log(`   Last address:  ${validVoters[NUM_ACCOUNTS - 1].address}\n`);
+
+        console.log(`Generating ${NUM_ACCOUNTS} invalid voter accounts...`);
+        const invalidVoters = generateAccounts(NUM_ACCOUNTS);
+        const invalidVotersPath = path.join(process.cwd(), FILE_PATHS.data.invalidVoters);
+        fs.writeFileSync(invalidVotersPath, JSON.stringify(invalidVoters, null, 2));
+        console.log(`✅ Invalid voters saved to: ${invalidVotersPath}`);
+        console.log(`   First address: ${invalidVoters[0].address}`);
+        console.log(`   Last address:  ${invalidVoters[NUM_ACCOUNTS - 1].address}\n`);
+
+        console.log('🎉 Account generation complete!');
+        console.log(`   Total accounts generated: ${NUM_ACCOUNTS * 2}`);
+    } catch (error) {
+        console.error('❌ Error generating accounts:', error.message);
+        throw error;
     }
-
-    console.log(`Generating ${NUM_ACCOUNTS} valid voter accounts...`);
-    const validVoters = generateAccounts(NUM_ACCOUNTS);
-    const validVotersPath = path.join(process.cwd(), FILE_PATHS.data.validVoters);
-    fs.writeFileSync(validVotersPath, JSON.stringify(validVoters, null, 2));
-    console.log(`✅ Valid voters saved to: ${validVotersPath}`);
-    console.log(`   First address: ${validVoters[0].address}`);
-    console.log(`   Last address:  ${validVoters[NUM_ACCOUNTS - 1].address}\n`);
-
-    console.log(`Generating ${NUM_ACCOUNTS} invalid voter accounts...`);
-    const invalidVoters = generateAccounts(NUM_ACCOUNTS);
-    const invalidVotersPath = path.join(process.cwd(), FILE_PATHS.data.invalidVoters);
-    fs.writeFileSync(invalidVotersPath, JSON.stringify(invalidVoters, null, 2));
-    console.log(`✅ Invalid voters saved to: ${invalidVotersPath}`);
-    console.log(`   First address: ${invalidVoters[0].address}`);
-    console.log(`   Last address:  ${invalidVoters[NUM_ACCOUNTS - 1].address}\n`);
-
-    console.log('🎉 Account generation complete!');
-    console.log(`   Total accounts generated: ${NUM_ACCOUNTS * 2}`);
 }
 
 main().catch(console.error);

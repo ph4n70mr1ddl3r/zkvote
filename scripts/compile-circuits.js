@@ -25,7 +25,7 @@ async function downloadFile(url, filepath) {
             file.on('finish', () => {
                 file.close();
                 const stats = fs.statSync(filepath);
-                if (stats.size < 1000) {
+                if (stats.size < 1000000) {
                     fs.unlinkSync(filepath);
                     reject(new Error('Downloaded file is too small, likely an error response'));
                 } else {
@@ -55,6 +55,9 @@ async function runCommand(command, description) {
     } catch (error) {
         console.error(`❌ Error in ${description}:`);
         console.error(error.message);
+        if (error.stderr) {
+            console.error('Error output:', error.stderr);
+        }
         throw error;
     }
 }
