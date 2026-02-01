@@ -13,44 +13,50 @@ import { TREE_DEPTH, MERKLE_PADDING_VALUE } from './constants.js';
  */
 export async function buildMerkleTree(addresses) {
     if (!Array.isArray(addresses)) {
-        throw new Error('Addresses must be an array');
+        throw new TypeError(`Addresses must be an array, received ${typeof addresses}`);
     }
     if (addresses.length === 0) {
         throw new Error('Cannot build Merkle tree from empty array');
     }
     if (addresses.length > 2 ** TREE_DEPTH) {
-        throw new Error(`Too many addresses (${addresses.length}) for tree depth ${TREE_DEPTH}`);
+        throw new Error(
+            `Too many addresses (${addresses.length}) for tree depth ${TREE_DEPTH}, maximum is ${2 ** TREE_DEPTH}`
+        );
     }
 
-    const leaves = addresses.map(addr => addressToFieldElement(addr));
+    try {
+        const leaves = addresses.map(addr => addressToFieldElement(addr));
 
-    const paddedLeaves = [...leaves];
-    const targetSize = 2 ** TREE_DEPTH;
-    while (paddedLeaves.length < targetSize) {
-        paddedLeaves.push(MERKLE_PADDING_VALUE);
-    }
-
-    const tree = [paddedLeaves];
-
-    for (let level = 0; level < TREE_DEPTH; level++) {
-        const currentLevel = tree[level];
-        const nextLevel = [];
-
-        for (let i = 0; i < currentLevel.length; i += 2) {
-            const left = currentLevel[i];
-            const right = currentLevel[i + 1];
-            const parent = await poseidonHash2(left, right);
-            nextLevel.push(parent);
+        const paddedLeaves = [...leaves];
+        const targetSize = 2 ** TREE_DEPTH;
+        while (paddedLeaves.length < targetSize) {
+            paddedLeaves.push(MERKLE_PADDING_VALUE);
         }
 
-        tree.push(nextLevel);
-    }
+        const tree = [paddedLeaves];
 
-    return {
-        root: tree[TREE_DEPTH][0],
-        tree,
-        leaves: paddedLeaves,
-    };
+        for (let level = 0; level < TREE_DEPTH; level++) {
+            const currentLevel = tree[level];
+            const nextLevel = [];
+
+            for (let i = 0; i < currentLevel.length; i += 2) {
+                const left = currentLevel[i];
+                const right = currentLevel[i + 1];
+                const parent = await poseidonHash2(left, right);
+                nextLevel.push(parent);
+            }
+
+            tree.push(nextLevel);
+        }
+
+        return {
+            root: tree[TREE_DEPTH][0],
+            tree,
+            leaves: paddedLeaves,
+        };
+    } catch (error) {
+        throw new Error(`Failed to build Merkle tree: ${error.message}`);
+    }
 }
 
 /**

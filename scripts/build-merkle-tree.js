@@ -27,8 +27,13 @@ async function main() {
 
         console.log(`📋 Loaded ${validVoters.length} valid voter addresses`);
 
-        // Extract addresses
         const addresses = validVoters.map(v => v.address);
+
+        for (let i = 0; i < addresses.length; i++) {
+            if (!addresses[i] || typeof addresses[i] !== 'string') {
+                throw new Error(`Invalid address at index ${i}: ${addresses[i]}`);
+            }
+        }
 
         console.log('🔨 Building Merkle tree...');
         const merkleTree = await buildMerkleTree(addresses);
@@ -57,7 +62,6 @@ async function main() {
         console.log(`   Merkle root: ${merkleTree.root}`);
         console.log(`   Saved to: ${treePath}\n`);
 
-        // Display tree structure summary
         console.log('📊 Tree structure:');
         for (let i = merkleTree.tree.length - 1; i >= 0; i--) {
             const level = merkleTree.tree.length - 1 - i;

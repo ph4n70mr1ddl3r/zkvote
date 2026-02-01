@@ -68,16 +68,20 @@ export async function poseidonHashMany(inputs) {
  */
 export function addressToFieldElement(address) {
     if (typeof address !== 'string') {
-        throw new Error('Address must be a string');
+        throw new TypeError(`Address must be a string, received ${typeof address}`);
     }
     if (!address.startsWith('0x')) {
-        throw new Error('Address must start with 0x prefix');
+        throw new Error(`Address must start with 0x prefix, received: ${address}`);
     }
     if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
-        throw new Error('Address must be a valid 20-byte Ethereum address');
+        throw new Error(`Address must be a valid 20-byte Ethereum address, received: ${address}`);
     }
-    const addressBigInt = BigInt(address);
-    return addressBigInt.toString();
+    try {
+        const addressBigInt = BigInt(address);
+        return addressBigInt.toString();
+    } catch (error) {
+        throw new Error(`Failed to convert address to field element: ${error.message}`);
+    }
 }
 
 /**
@@ -103,6 +107,6 @@ export async function computeNullifier(sigR, sigS, topicIdHash) {
     try {
         return poseidonHashMany([BigInt(sigR), BigInt(sigS), BigInt(topicIdHash)]);
     } catch (error) {
-        throw new Error(`Invalid signature or topic ID hash: ${error.message}`);
+        throw new Error(`Failed to compute nullifier: ${error.message}`);
     }
 }

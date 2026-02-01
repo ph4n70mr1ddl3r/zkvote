@@ -6,6 +6,7 @@ import { signVoteMessage, signatureToFieldElements } from '../utils/eip712.js';
 import { getMerkleProof } from '../utils/merkle-helper.js';
 import { addressToFieldElement, computeNullifier } from '../utils/poseidon.js';
 import {
+    ALLOWED_VOTE_MESSAGE_PATTERN,
     DEFAULT_TOPIC_ID,
     FILE_PATHS,
     MAX_VOTE_MESSAGE_LENGTH,
@@ -22,17 +23,17 @@ import { readAndValidateJsonFile } from '../utils/json-helper.js';
 
 function validateVoteMessage(message) {
     if (typeof message !== 'string') {
-        throw new Error('Vote message must be a string');
+        throw new TypeError(`Vote message must be a string, received ${typeof message}`);
     }
     if (message.length === 0) {
         throw new Error('Vote message cannot be empty');
     }
     if (message.length > MAX_VOTE_MESSAGE_LENGTH) {
         throw new Error(
-            `Vote message exceeds maximum length of ${MAX_VOTE_MESSAGE_LENGTH} characters`
+            `Vote message exceeds maximum length of ${MAX_VOTE_MESSAGE_LENGTH} characters (received ${message.length})`
         );
     }
-    if (!/^[\x20-\x7E]*$/.test(message)) {
+    if (!ALLOWED_VOTE_MESSAGE_PATTERN.test(message)) {
         throw new Error(
             'Vote message contains invalid characters (ASCII printable characters only)'
         );
@@ -41,7 +42,7 @@ function validateVoteMessage(message) {
 
 function validateVoterIndex(index, maxIndex) {
     if (!Number.isInteger(index)) {
-        throw new Error(`Voter index must be an integer, got ${typeof index}`);
+        throw new TypeError(`Voter index must be an integer, got ${typeof index}`);
     }
     if (index < 0) {
         throw new Error(`Voter index must be non-negative, got ${index}`);

@@ -10,7 +10,7 @@ import path from 'path';
  */
 export function readAndValidateJsonFile(filePath, schema) {
     if (!filePath || typeof filePath !== 'string') {
-        throw new Error('File path must be a non-empty string');
+        throw new TypeError('File path must be a non-empty string');
     }
     if (!fs.existsSync(filePath)) {
         throw new Error(`File not found: ${filePath}`);
@@ -58,5 +58,28 @@ function validateSchema(data, schema) {
 
     if (schema.nonEmpty && Array.isArray(data) && data.length === 0) {
         throw new Error('Expected data to be non-empty array');
+    }
+}
+
+/**
+ * Write JSON data to a file
+ * @param {string} filePath - Path to the file
+ * @param {Object|Array} data - Data to write
+ * @throws {Error} If file cannot be written
+ */
+export function writeJsonFile(filePath, data) {
+    if (!filePath || typeof filePath !== 'string') {
+        throw new TypeError('File path must be a non-empty string');
+    }
+
+    const dir = path.dirname(filePath);
+    if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+    }
+
+    try {
+        fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+    } catch (error) {
+        throw new Error(`Failed to write JSON file ${path.basename(filePath)}: ${error.message}`);
     }
 }

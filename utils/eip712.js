@@ -57,21 +57,28 @@ export async function signVoteMessage(wallet, topicId) {
     if (!topicId || typeof topicId !== 'string' || topicId.trim().length === 0) {
         throw new Error('Topic ID must be a non-empty string');
     }
+    if (!wallet || typeof wallet.signTypedData !== 'function') {
+        throw new Error('Invalid wallet instance provided');
+    }
 
     const domain = createDomain(topicId);
     const message = createVoteMessage(topicId);
 
-    const signature = await wallet.signTypedData(domain, voteTypes, message);
+    try {
+        const signature = await wallet.signTypedData(domain, voteTypes, message);
 
-    const sig = ethers.Signature.from(signature);
+        const sig = ethers.Signature.from(signature);
 
-    return {
-        signature,
-        r: sig.r,
-        s: sig.s,
-        v: sig.v,
-        messageHash: ethers.TypedDataEncoder.hash(domain, voteTypes, message),
-    };
+        return {
+            signature,
+            r: sig.r,
+            s: sig.s,
+            v: sig.v,
+            messageHash: ethers.TypedDataEncoder.hash(domain, voteTypes, message),
+        };
+    } catch (error) {
+        throw new Error(`Failed to sign vote message: ${error.message}`);
+    }
 }
 
 /**
@@ -80,11 +87,22 @@ export async function signVoteMessage(wallet, topicId) {
  * @returns {Object} Object with r, s, and v as string values
  */
 export function signatureToFieldElements(sig) {
-    return {
-        r: BigInt(sig.r).toString(),
-        s: BigInt(sig.s).toString(),
-        v: sig.v.toString(),
-    };
+    if (!sig || typeof sig !== 'object') {
+        throw new Error('Invalid signature object provided');
+    }
+    if (!sig.r || !sig.s || sig.v === undefined) {
+        throw new Error('Signature object must contain r, s, and v properties');
+    }
+
+    try {
+        return {
+            r: BigInt(sig.r).toString(),
+            s: BigInt(sig.s).toString(),
+            v: sig.v.toString(),
+        };
+    } catch (error) {
+        throw new Error(`Failed to convert signature to field elements: ${error.message}`);
+    }
 }
 
 /**

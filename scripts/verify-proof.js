@@ -13,7 +13,7 @@ async function verifyProof(proofPath) {
     console.log('🔍 Verifying ZK proof...\n');
 
     if (!proofPath || typeof proofPath !== 'string') {
-        throw new Error('Invalid proof path provided');
+        throw new TypeError('Invalid proof path provided');
     }
 
     try {
