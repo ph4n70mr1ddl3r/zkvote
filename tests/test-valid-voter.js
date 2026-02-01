@@ -44,7 +44,7 @@ async function testValidVoter() {
         console.log(`✓ Topic: ${topicId}\n`);
 
         console.log('⚙️  Generating first proof...');
-        const sig1 = await signVoteMessage(wallet, topicId, voteMessage);
+        const sig1 = await signVoteMessage(wallet, topicId);
         const sigFields1 = signatureToFieldElements(sig1);
 
         const merkleProof = getMerkleProof(treeData.tree, voterIndex);
@@ -85,7 +85,7 @@ async function testValidVoter() {
         console.log('⚙️  Testing nullifier determinism...');
         console.log('   Generating second proof with same parameters...');
 
-        const sig2 = await signVoteMessage(wallet, topicId, voteMessage);
+        const sig2 = await signVoteMessage(wallet, topicId);
         const sigFields2 = signatureToFieldElements(sig2);
 
         // Compute nullifiers

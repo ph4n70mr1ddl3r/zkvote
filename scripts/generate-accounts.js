@@ -1,16 +1,20 @@
 import { ethers } from 'ethers';
 import fs from 'fs';
 import path from 'path';
-import { FILE_PATHS } from '../utils/constants.js';
+import { FILE_PATHS, NUM_ACCOUNTS } from '../utils/constants.js';
 
 /**
  * Generate Ethereum accounts for testing the ZKP voting system
- * Creates 100 valid voters and 100 invalid voters
+ * Creates NUM_ACCOUNTS valid voters and NUM_ACCOUNTS invalid voters
  */
 
-const NUM_ACCOUNTS = 100;
-
 function generateAccounts(count) {
+    if (!Number.isInteger(count) || count <= 0) {
+        throw new Error('Account count must be a positive integer');
+    }
+    if (count > 1000) {
+        throw new Error('Account count cannot exceed 1000');
+    }
     const accounts = [];
 
     for (let i = 0; i < count; i++) {

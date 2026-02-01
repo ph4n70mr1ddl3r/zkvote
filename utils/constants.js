@@ -38,3 +38,5 @@ export const CIRCUIT_CONFIG = {
     CIRCUIT_NAME: 'vote',
     PTAU_SIZE: 15
 };
+
+export const NUM_ACCOUNTS = 100;

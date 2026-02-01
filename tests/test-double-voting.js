@@ -58,7 +58,7 @@ async function testDoubleVoting() {
         console.log(`   Topic: ${topicId}`);
         console.log('   Generating proof...\n');
 
-        const sig1 = await signVoteMessage(wallet, topicId, voteMessage1);
+        const sig1 = await signVoteMessage(wallet, topicId);
         const sigFields1 = signatureToFieldElements(sig1);
 
         const merkleProof = getMerkleProof(treeData.tree, voterIndex);
@@ -86,7 +86,7 @@ async function testDoubleVoting() {
             throw new Error('First proof verification failed!');
         }
 
-        const nullifier1 = ps1[3];
+        const nullifier1 = ps1[0];
         console.log(`   ✅ Proof verified`);
         console.log(`   Nullifier: ${nullifier1}`);
 
@@ -104,7 +104,7 @@ async function testDoubleVoting() {
         console.log(`   Topic: ${topicId} (SAME topic)`);
         console.log('   Generating proof...\n');
 
-        const sig2 = await signVoteMessage(wallet, topicId, voteMessage2);
+        const sig2 = await signVoteMessage(wallet, topicId);
         const sigFields2 = signatureToFieldElements(sig2);
 
         const input2 = {

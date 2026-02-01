@@ -36,8 +36,8 @@ async function testNullifierDeterminism() {
 
         console.log(`  Generating two signatures for voter 1, topic "${topic1}"...`);
 
-        const sig1a = await signVoteMessage(wallet1, topic1, message1);
-        const sig1b = await signVoteMessage(wallet1, topic1, message1);
+        const sig1a = await signVoteMessage(wallet1, topic1);
+        const sig1b = await signVoteMessage(wallet1, topic1);
 
         const fields1a = signatureToFieldElements(sig1a);
         const fields1b = signatureToFieldElements(sig1b);
@@ -73,7 +73,7 @@ async function testNullifierDeterminism() {
 
         console.log(`  Generating signature for voter 1, topic "${topic2}"...`);
 
-        const sig2 = await signVoteMessage(wallet1, topic2, message1);
+        const sig2 = await signVoteMessage(wallet1, topic2);
         const fields2 = signatureToFieldElements(sig2);
 
         const topicHash2 = BigInt(ethers.id(topic2));
@@ -99,7 +99,7 @@ async function testNullifierDeterminism() {
 
         console.log(`  Generating signature for voter 2, topic "${topic1}"...`);
 
-        const sig3 = await signVoteMessage(wallet2, topic1, message1);
+        const sig3 = await signVoteMessage(wallet2, topic1);
         const fields3 = signatureToFieldElements(sig3);
 
         const nullifier3 = await poseidonHashMany([

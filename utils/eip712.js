@@ -34,9 +34,9 @@ export function createVoteMessage(topicId) {
  * Sign a vote message using EIP-712
  * Returns deterministic signature components
  */
-export async function signVoteMessage(wallet, topicId, voteMessage) {
+export async function signVoteMessage(wallet, topicId) {
     const domain = createDomain(topicId);
-    const message = createVoteMessage(topicId, voteMessage);
+    const message = createVoteMessage(topicId);
 
     // Sign using EIP-712
     const signature = await wallet.signTypedData(domain, voteTypes, message);

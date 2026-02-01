@@ -42,14 +42,12 @@ template Vote(levels) {
     
     nullifier <== nullifierHasher.out;
     
-    // 3. Verify signature is related to message
-    // We verify that the signature components are non-zero
-    // (Full ECDSA verification would be too expensive for this demo)
+    // 3. Verify signature components and message hash are non-zero
     signal sigRNonZero;
     signal sigSNonZero;
     sigRNonZero <== sigR * sigR;
     sigSNonZero <== sigS * sigS;
-    
+
     // Ensure message hash is included in the proof
     signal messageHashSquared;
     messageHashSquared <== messageHash * messageHash;

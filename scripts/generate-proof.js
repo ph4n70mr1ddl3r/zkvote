@@ -77,7 +77,7 @@ async function generateProof(voterIndex, voteMessage, useInvalid = false) {
 
     // Sign the vote message using EIP-712
     console.log('✍️  Signing vote message...');
-    const sig = await signVoteMessage(wallet, topicId, voteMessage);
+    const sig = await signVoteMessage(wallet, topicId);
     const sigFields = signatureToFieldElements(sig);
 
     console.log(`   Signature r: ${sigFields.r.substring(0, 20)}...`);

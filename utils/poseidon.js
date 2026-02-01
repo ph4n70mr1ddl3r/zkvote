@@ -44,7 +44,12 @@ export async function poseidonHashMany(inputs) {
  * Convert Ethereum address to field element
  */
 export function addressToFieldElement(address) {
-    // Remove 0x prefix and convert to BigInt
+    if (typeof address !== 'string') {
+        throw new Error('Address must be a string');
+    }
+    if (!address.startsWith('0x')) {
+        throw new Error('Address must start with 0x prefix');
+    }
     const addressBigInt = BigInt(address);
     return addressBigInt.toString();
 }

@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { buildMerkleTree } from '../utils/merkle-helper.js';
-import { FILE_PATHS } from '../utils/constants.js';
+import { FILE_PATHS, TREE_DEPTH } from '../utils/constants.js';
 
 async function main() {
     console.log('🌳 Building Merkle tree from valid voters...\n');
@@ -34,7 +34,7 @@ async function main() {
     const treePath = path.join(process.cwd(), FILE_PATHS.data.merkleTree);
     const treeData = {
         root: merkleTree.root,
-        depth: 7,
+        depth: TREE_DEPTH,
         leafCount: validVoters.length,
         tree: merkleTree.tree,
         leaves: merkleTree.leaves
@@ -43,7 +43,7 @@ async function main() {
     fs.writeFileSync(treePath, JSON.stringify(treeData, null, 2));
 
     console.log('\n✅ Merkle tree built successfully!');
-    console.log(`   Tree depth: 7`);
+    console.log(`   Tree depth: ${TREE_DEPTH}`);
     console.log(`   Leaf count: ${validVoters.length}`);
     console.log(`   Total nodes: ${merkleTree.tree.reduce((sum, level) => sum + level.length, 0)}`);
     console.log(`   Merkle root: ${merkleTree.root}`);

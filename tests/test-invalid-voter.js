@@ -44,7 +44,7 @@ async function testInvalidVoter() {
         console.log(`✓ Topic: ${topicId}\n`);
 
         console.log('⚙️  Attempting to generate proof...');
-        const sig = await signVoteMessage(wallet, topicId, voteMessage);
+        const sig = await signVoteMessage(wallet, topicId);
         const sigFields = signatureToFieldElements(sig);
 
         const fakeMerkleProof = {
