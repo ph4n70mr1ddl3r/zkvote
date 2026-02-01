@@ -2,14 +2,16 @@ import { buildPoseidon } from 'circomlibjs';
 
 let poseidonInstance = null;
 
-/**
- * Get or initialize the Poseidon hash function
- * Poseidon is a ZK-friendly hash function optimized for use in circuits
- */
 export async function getPoseidon() {
     if (!poseidonInstance) {
         poseidonInstance = await buildPoseidon();
     }
+    return poseidonInstance;
+}
+
+export function resetPoseidonInstance() {
+    poseidonInstance = null;
+}
     return poseidonInstance;
 }
 
@@ -49,6 +51,9 @@ export function addressToFieldElement(address) {
     }
     if (!address.startsWith('0x')) {
         throw new Error('Address must start with 0x prefix');
+    }
+    if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
+        throw new Error('Address must be a valid 20-byte Ethereum address');
     }
     const addressBigInt = BigInt(address);
     return addressBigInt.toString();

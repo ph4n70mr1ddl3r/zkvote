@@ -4,29 +4,24 @@ import { ethers } from 'ethers';
 import * as snarkjs from 'snarkjs';
 import { signVoteMessage, signatureToFieldElements } from '../utils/eip712.js';
 import { addressToFieldElement } from '../utils/poseidon.js';
-import { FILE_PATHS, MERKLE_PADDING_VALUE, TREE_DEPTH } from '../utils/constants.js';
+import { FILE_PATHS, MERKLE_PADDING_VALUE, TREE_DEPTH, DISPLAY_WIDTH } from '../utils/constants.js';
+import { readAndValidateJsonFile } from '../utils/json-helper.js';
 
 async function testInvalidVoter() {
-    console.log('\n' + '='.repeat(70));
+    console.log('\n' + '='.repeat(DISPLAY_WIDTH.STANDARD));
     console.log('TEST: Invalid Voter Proof Rejection');
-    console.log('='.repeat(70) + '\n');
+    console.log('='.repeat(DISPLAY_WIDTH.STANDARD) + '\n');
 
     try {
         const invalidVotersPath = path.join(process.cwd(), FILE_PATHS.data.invalidVoters);
-        let invalidVoters;
-        try {
-            invalidVoters = JSON.parse(fs.readFileSync(invalidVotersPath, 'utf8'));
-        } catch (error) {
-            throw new Error(`Failed to parse invalid voters file: ${error.message}`);
-        }
+        const invalidVoters = readAndValidateJsonFile(invalidVotersPath, {
+            isArray: true
+        });
 
         const treePath = path.join(process.cwd(), FILE_PATHS.data.merkleTree);
-        let treeData;
-        try {
-            treeData = JSON.parse(fs.readFileSync(treePath, 'utf8'));
-        } catch (error) {
-            throw new Error(`Failed to parse Merkle tree file: ${error.message}`);
-        }
+        const treeData = readAndValidateJsonFile(treePath, {
+            requiredFields: ['root', 'tree', 'leaves']
+        });
 
         // Test with first invalid voter
         const voterIndex = 0;
@@ -85,10 +80,12 @@ async function testInvalidVoter() {
 
         // Try to verify the proof
         console.log('⚙️  Attempting to verify proof...');
-        const vkey = JSON.parse(fs.readFileSync(
+        const vkey = readAndValidateJsonFile(
             path.join(process.cwd(), 'build', 'vote_verification_key.json'),
-            'utf8'
-        ));
+            {
+                requiredFields: ['vk_alpha_1', 'vk_beta_2', 'vk_gamma_2', 'vk_delta_2', 'IC']
+            }
+        );
 
         const isValid = await snarkjs.groth16.verify(vkey, publicSignals, proof);
 
@@ -114,7 +111,7 @@ async function testInvalidVoter() {
 // Run test
 testInvalidVoter()
     .then((passed) => {
-        console.log('\n' + '='.repeat(70));
+        console.log('\n' + '='.repeat(DISPLAY_WIDTH.STANDARD));
         process.exit(passed ? 0 : 1);
     })
     .catch((error) => {

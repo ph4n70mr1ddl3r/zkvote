@@ -5,7 +5,8 @@ import * as snarkjs from 'snarkjs';
 import { signVoteMessage, signatureToFieldElements } from '../utils/eip712.js';
 import { getMerkleProof, proofToCircuitInput } from '../utils/merkle-helper.js';
 import { addressToFieldElement, poseidonHashMany } from '../utils/poseidon.js';
-import { DEFAULT_TOPIC_ID, FILE_PATHS, MAX_VOTE_MESSAGE_LENGTH, MERKLE_PADDING_VALUE, TREE_DEPTH } from '../utils/constants.js';
+import { DEFAULT_TOPIC_ID, FILE_PATHS, MAX_VOTE_MESSAGE_LENGTH, MERKLE_PADDING_VALUE, TREE_DEPTH, PUBLIC_SIGNAL } from '../utils/constants.js';
+import { readAndValidateJsonFile } from '../utils/json-helper.js';
 
 /**
  * Generate a ZK proof for a vote
@@ -45,12 +46,9 @@ async function generateProof(voterIndex, voteMessage, useInvalid = false) {
         throw new Error(`Voters file not found: ${votersPath}`);
     }
 
-    let voters;
-    try {
-        voters = JSON.parse(fs.readFileSync(votersPath, 'utf8'));
-    } catch (error) {
-        throw new Error(`Failed to parse voters file: ${error.message}`);
-    }
+    const voters = readAndValidateJsonFile(votersPath, {
+        isArray: true
+    });
 
     validateVoterIndex(voterIndex, voters.length - 1);
 
@@ -63,12 +61,9 @@ async function generateProof(voterIndex, voteMessage, useInvalid = false) {
         throw new Error('Merkle tree not found. Run: npm run build-tree');
     }
 
-    let treeData;
-    try {
-        treeData = JSON.parse(fs.readFileSync(treePath, 'utf8'));
-    } catch (error) {
-        throw new Error(`Failed to parse Merkle tree file: ${error.message}`);
-    }
+    const treeData = readAndValidateJsonFile(treePath, {
+        requiredFields: ['root', 'tree', 'leaves']
+    });
     console.log(`🌳 Merkle root: ${treeData.root}`);
 
     const wallet = new ethers.Wallet(voter.privateKey);
@@ -141,10 +136,10 @@ async function generateProof(voterIndex, voteMessage, useInvalid = false) {
     const nullifier = await poseidonHashMany(nullifierInputs);
 
     console.log('📊 Proof details:');
-    console.log(`   Nullifier: ${publicSignals[0]}`);
-    console.log(`   Merkle root: ${publicSignals[1]}`);
-    console.log(`   Topic ID: ${publicSignals[2]}`);
-    console.log(`   Message hash: ${publicSignals[3]}`);
+    console.log(`   Nullifier: ${publicSignals[PUBLIC_SIGNAL.NULLIFIER]}`);
+    console.log(`   Merkle root: ${publicSignals[PUBLIC_SIGNAL.MERKLE_ROOT]}`);
+    console.log(`   Topic ID: ${publicSignals[PUBLIC_SIGNAL.TOPIC_ID]}`);
+    console.log(`   Message hash: ${publicSignals[PUBLIC_SIGNAL.MESSAGE_HASH]}`);
     console.log(`   Computed nullifier: ${nullifier}\n`);
 
     const proofData = {

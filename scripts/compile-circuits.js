@@ -133,7 +133,7 @@ async function main() {
         const { stdout } = await execAsync(`snarkjs r1cs info ${buildPath}.r1cs`);
         console.log(stdout);
     } catch (error) {
-        // Info command might fail on some systems
+        console.warn('  Could not retrieve circuit info');
     }
 }
 

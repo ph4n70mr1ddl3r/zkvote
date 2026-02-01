@@ -2,6 +2,7 @@ import { ethers } from 'ethers';
 import fs from 'fs';
 import path from 'path';
 import { FILE_PATHS, NUM_ACCOUNTS } from '../utils/constants.js';
+import { readAndValidateJsonFile } from '../utils/json-helper.js';
 
 /**
  * Generate Ethereum accounts for testing the ZKP voting system
@@ -9,8 +10,11 @@ import { FILE_PATHS, NUM_ACCOUNTS } from '../utils/constants.js';
  */
 
 function generateAccounts(count) {
-    if (!Number.isInteger(count) || count <= 0) {
-        throw new Error('Account count must be a positive integer');
+    if (!Number.isInteger(count)) {
+        throw new Error('Account count must be an integer');
+    }
+    if (count <= 0) {
+        throw new Error('Account count must be positive');
     }
     if (count > 1000) {
         throw new Error('Account count cannot exceed 1000');

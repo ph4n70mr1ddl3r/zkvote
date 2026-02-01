@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { buildMerkleTree } from '../utils/merkle-helper.js';
 import { FILE_PATHS, TREE_DEPTH } from '../utils/constants.js';
+import { readAndValidateJsonFile } from '../utils/json-helper.js';
 
 async function main() {
     console.log('🌳 Building Merkle tree from valid voters...\n');
@@ -14,14 +15,9 @@ async function main() {
         process.exit(1);
     }
 
-    let validVoters;
-    try {
-        validVoters = JSON.parse(fs.readFileSync(validVotersPath, 'utf8'));
-    } catch (error) {
-        console.error('❌ Error: Failed to parse valid-voters.json!');
-        console.error(`   ${error.message}`);
-        process.exit(1);
-    }
+    const validVoters = readAndValidateJsonFile(validVotersPath, {
+        isArray: true
+    });
     console.log(`📋 Loaded ${validVoters.length} valid voter addresses`);
 
     // Extract addresses

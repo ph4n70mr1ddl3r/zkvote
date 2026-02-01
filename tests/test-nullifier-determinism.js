@@ -3,21 +3,19 @@ import path from 'path';
 import { ethers } from 'ethers';
 import { signVoteMessage, signatureToFieldElements } from '../utils/eip712.js';
 import { poseidonHashMany } from '../utils/poseidon.js';
-import { FILE_PATHS } from '../utils/constants.js';
+import { FILE_PATHS, DISPLAY_WIDTH } from '../utils/constants.js';
+import { readAndValidateJsonFile } from '../utils/json-helper.js';
 
 async function testNullifierDeterminism() {
-    console.log('\n' + '='.repeat(70));
+    console.log('\n' + '='.repeat(DISPLAY_WIDTH.STANDARD));
     console.log('TEST: Nullifier Determinism');
-    console.log('='.repeat(70) + '\n');
+    console.log('='.repeat(DISPLAY_WIDTH.STANDARD) + '\n');
 
     try {
         const votersPath = path.join(process.cwd(), FILE_PATHS.data.validVoters);
-        let voters;
-        try {
-            voters = JSON.parse(fs.readFileSync(votersPath, 'utf8'));
-        } catch (error) {
-            throw new Error(`Failed to parse voters file: ${error.message}`);
-        }
+        const voters = readAndValidateJsonFile(votersPath, {
+            isArray: true
+        });
 
         const voter1 = voters[0];
         const voter2 = voters[1];
@@ -29,7 +27,7 @@ async function testNullifierDeterminism() {
 
         // Test 1: Same voter, same topic → same nullifier
         console.log('Test 1: Same voter, same topic → same nullifier');
-        console.log('-'.repeat(70));
+        console.log('-'.repeat(DISPLAY_WIDTH.STANDARD));
 
         const topic1 = 'topic-A';
         const message1 = 'Vote A';
@@ -67,7 +65,7 @@ async function testNullifierDeterminism() {
 
         // Test 2: Same voter, different topic → different nullifier
         console.log('Test 2: Same voter, different topic → different nullifier');
-        console.log('-'.repeat(70));
+        console.log('-'.repeat(DISPLAY_WIDTH.STANDARD));
 
         const topic2 = 'topic-B';
 
@@ -95,7 +93,7 @@ async function testNullifierDeterminism() {
 
         // Test 3: Different voter, same topic → different nullifier
         console.log('Test 3: Different voter, same topic → different nullifier');
-        console.log('-'.repeat(70));
+        console.log('-'.repeat(DISPLAY_WIDTH.STANDARD));
 
         console.log(`  Generating signature for voter 2, topic "${topic1}"...`);
 
@@ -134,7 +132,7 @@ async function testNullifierDeterminism() {
 // Run test
 testNullifierDeterminism()
     .then((passed) => {
-        console.log('\n' + '='.repeat(70));
+        console.log('\n' + '='.repeat(DISPLAY_WIDTH.STANDARD));
         process.exit(passed ? 0 : 1);
     })
     .catch((error) => {

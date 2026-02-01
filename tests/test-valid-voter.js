@@ -5,29 +5,24 @@ import * as snarkjs from 'snarkjs';
 import { signVoteMessage, signatureToFieldElements } from '../utils/eip712.js';
 import { getMerkleProof } from '../utils/merkle-helper.js';
 import { addressToFieldElement, poseidonHashMany } from '../utils/poseidon.js';
-import { FILE_PATHS } from '../utils/constants.js';
+import { FILE_PATHS, PUBLIC_SIGNAL, DISPLAY_WIDTH } from '../utils/constants.js';
+import { readAndValidateJsonFile } from '../utils/json-helper.js';
 
 async function testValidVoter() {
-    console.log('\n' + '='.repeat(70));
+    console.log('\n' + '='.repeat(DISPLAY_WIDTH.STANDARD));
     console.log('TEST: Valid Voter Proof Generation and Verification');
-    console.log('='.repeat(70) + '\n');
+    console.log('='.repeat(DISPLAY_WIDTH.STANDARD) + '\n');
 
     try {
         const votersPath = path.join(process.cwd(), FILE_PATHS.data.validVoters);
-        let voters;
-        try {
-            voters = JSON.parse(fs.readFileSync(votersPath, 'utf8'));
-        } catch (error) {
-            throw new Error(`Failed to parse voters file: ${error.message}`);
-        }
+        const voters = readAndValidateJsonFile(votersPath, {
+            isArray: true
+        });
 
         const treePath = path.join(process.cwd(), FILE_PATHS.data.merkleTree);
-        let treeData;
-        try {
-            treeData = JSON.parse(fs.readFileSync(treePath, 'utf8'));
-        } catch (error) {
-            throw new Error(`Failed to parse Merkle tree file: ${error.message}`);
-        }
+        const treeData = readAndValidateJsonFile(treePath, {
+            requiredFields: ['root', 'tree', 'leaves']
+        });
 
         // Test with first voter
         const voterIndex = 0;
@@ -68,10 +63,12 @@ async function testValidVoter() {
 
         console.log('✓ First proof generated');
 
-        const vkey = JSON.parse(fs.readFileSync(
+        const vkey = readAndValidateJsonFile(
             path.join(process.cwd(), FILE_PATHS.build.verificationKey),
-            'utf8'
-        ));
+            {
+                requiredFields: ['vk_alpha_1', 'vk_beta_2', 'vk_gamma_2', 'vk_delta_2', 'IC']
+            }
+        );
 
         const isValid1 = await snarkjs.groth16.verify(vkey, ps1, proof1);
 
@@ -113,9 +110,9 @@ async function testValidVoter() {
         // Test Merkle root validation
         console.log('⚙️  Validating Merkle root in proof...');
         console.log(`   Expected root: ${treeData.root}`);
-        console.log(`   Proof root:    ${ps1[1]}`);
+        console.log(`   Proof root:    ${ps1[PUBLIC_SIGNAL.MERKLE_ROOT]}`);
 
-        if (ps1[1] !== treeData.root) {
+        if (ps1[PUBLIC_SIGNAL.MERKLE_ROOT] !== treeData.root) {
             throw new Error('Merkle root mismatch!');
         }
 
@@ -138,7 +135,7 @@ async function testValidVoter() {
 // Run test
 testValidVoter()
     .then((passed) => {
-        console.log('\n' + '='.repeat(70));
+        console.log('\n' + '='.repeat(DISPLAY_WIDTH.STANDARD));
         process.exit(passed ? 0 : 1);
     })
     .catch((error) => {

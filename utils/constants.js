@@ -40,3 +40,15 @@ export const CIRCUIT_CONFIG = {
 };
 
 export const NUM_ACCOUNTS = 100;
+
+export const PUBLIC_SIGNAL = {
+    NULLIFIER: 0,
+    MERKLE_ROOT: 1,
+    TOPIC_ID: 2,
+    MESSAGE_HASH: 3
+};
+
+export const DISPLAY_WIDTH = {
+    STANDARD: 70,
+    WIDE: 80
+};

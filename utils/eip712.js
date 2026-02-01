@@ -67,9 +67,9 @@ export function signatureToFieldElements(sig) {
 /**
  * Recover signer address from signature (for verification)
  */
-export function recoverSigner(topicId, voteMessage, signature) {
+export function recoverSigner(topicId, signature) {
     const domain = createDomain(topicId);
-    const message = createVoteMessage(topicId, voteMessage);
+    const message = createVoteMessage(topicId);
 
     return ethers.verifyTypedData(domain, voteTypes, message, signature);
 }

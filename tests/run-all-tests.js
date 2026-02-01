@@ -1,5 +1,6 @@
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { DISPLAY_WIDTH } from '../utils/constants.js';
 
 const execAsync = promisify(exec);
 
@@ -31,10 +32,10 @@ const tests = [
 ];
 
 async function runTest(test) {
-    console.log(`\n${'='.repeat(80)}`);
+    console.log(`\n${'='.repeat(DISPLAY_WIDTH.WIDE)}`);
     console.log(`Running: ${test.name}`);
     console.log(`Description: ${test.description}`);
-    console.log('='.repeat(80));
+    console.log('='.repeat(DISPLAY_WIDTH.WIDE));
 
     try {
         const { stdout, stderr } = await execAsync(`node ${test.file}`);
@@ -55,9 +56,9 @@ async function runTest(test) {
 }
 
 async function runAllTests() {
-    console.log('\n' + '█'.repeat(80));
+    console.log('\n' + '█'.repeat(DISPLAY_WIDTH.WIDE));
     console.log('  ZKP VOTING SYSTEM - TEST SUITE');
-    console.log('█'.repeat(80));
+    console.log('█'.repeat(DISPLAY_WIDTH.WIDE));
 
     const results = [];
 
@@ -67,9 +68,9 @@ async function runAllTests() {
     }
 
     // Print summary
-    console.log('\n' + '█'.repeat(80));
+    console.log('\n' + '█'.repeat(DISPLAY_WIDTH.WIDE));
     console.log('  TEST SUMMARY');
-    console.log('█'.repeat(80) + '\n');
+    console.log('█'.repeat(DISPLAY_WIDTH.WIDE) + '\n');
 
     let passCount = 0;
     let failCount = 0;
@@ -88,11 +89,11 @@ async function runAllTests() {
         }
     }
 
-    console.log('\n' + '-'.repeat(80));
+    console.log('\n' + '-'.repeat(DISPLAY_WIDTH.WIDE));
     console.log(`Total: ${tests.length} tests`);
     console.log(`Passed: ${passCount}`);
     console.log(`Failed: ${failCount}`);
-    console.log('-'.repeat(80));
+    console.log('-'.repeat(DISPLAY_WIDTH.WIDE));
 
     if (failCount === 0) {
         console.log('\n🎉 All tests passed! The ZKP voting system is working correctly.\n');

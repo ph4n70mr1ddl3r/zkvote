@@ -5,39 +5,31 @@ import * as snarkjs from 'snarkjs';
 import { signVoteMessage, signatureToFieldElements } from '../utils/eip712.js';
 import { getMerkleProof } from '../utils/merkle-helper.js';
 import { addressToFieldElement, poseidonHashMany } from '../utils/poseidon.js';
-import { FILE_PATHS } from '../utils/constants.js';
+import { FILE_PATHS, PUBLIC_SIGNAL, DISPLAY_WIDTH } from '../utils/constants.js';
+import { readAndValidateJsonFile } from '../utils/json-helper.js';
 
 async function testDoubleVoting() {
-    console.log('\n' + '='.repeat(70));
+    console.log('\n' + '='.repeat(DISPLAY_WIDTH.STANDARD));
     console.log('TEST: Double Voting Prevention');
-    console.log('='.repeat(70) + '\n');
+    console.log('='.repeat(DISPLAY_WIDTH.STANDARD) + '\n');
 
     try {
         const votersPath = path.join(process.cwd(), FILE_PATHS.data.validVoters);
-        let voters;
-        try {
-            voters = JSON.parse(fs.readFileSync(votersPath, 'utf8'));
-        } catch (error) {
-            throw new Error(`Failed to parse voters file: ${error.message}`);
-        }
+        const voters = readAndValidateJsonFile(votersPath, {
+            isArray: true
+        });
 
         const treePath = path.join(process.cwd(), FILE_PATHS.data.merkleTree);
-        let treeData;
-        try {
-            treeData = JSON.parse(fs.readFileSync(treePath, 'utf8'));
-        } catch (error) {
-            throw new Error(`Failed to parse Merkle tree file: ${error.message}`);
-        }
+        const treeData = readAndValidateJsonFile(treePath, {
+            requiredFields: ['root', 'tree', 'leaves']
+        });
 
-        let vkey;
-        try {
-            vkey = JSON.parse(fs.readFileSync(
-                path.join(process.cwd(), FILE_PATHS.build.verificationKey),
-                'utf8'
-            ));
-        } catch (error) {
-            throw new Error(`Failed to parse verification key file: ${error.message}`);
-        }
+        const vkey = readAndValidateJsonFile(
+            path.join(process.cwd(), FILE_PATHS.build.verificationKey),
+            {
+                requiredFields: ['vk_alpha_1', 'vk_beta_2', 'vk_gamma_2', 'vk_delta_2', 'IC']
+            }
+        );
 
         const voterIndex = 0;
         const voter = voters[voterIndex];
@@ -86,7 +78,7 @@ async function testDoubleVoting() {
             throw new Error('First proof verification failed!');
         }
 
-        const nullifier1 = ps1[0];
+        const nullifier1 = ps1[PUBLIC_SIGNAL.NULLIFIER];
         console.log(`   ✅ Proof verified`);
         console.log(`   Nullifier: ${nullifier1}`);
 
@@ -130,7 +122,7 @@ async function testDoubleVoting() {
             throw new Error('Second proof verification failed!');
         }
 
-        const nullifier2 = ps2[3];
+        const nullifier2 = ps2[0];
         console.log(`   ✅ Proof verified`);
         console.log(`   Nullifier: ${nullifier2}`);
 
@@ -172,7 +164,7 @@ async function testDoubleVoting() {
 // Run test
 testDoubleVoting()
     .then((passed) => {
-        console.log('\n' + '='.repeat(70));
+        console.log('\n' + '='.repeat(DISPLAY_WIDTH.STANDARD));
         process.exit(passed ? 0 : 1);
     })
     .catch((error) => {

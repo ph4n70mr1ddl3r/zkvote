@@ -1,7 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import * as snarkjs from 'snarkjs';
-import { FILE_PATHS } from '../utils/constants.js';
+import { FILE_PATHS, PUBLIC_SIGNAL } from '../utils/constants.js';
+import { readAndValidateJsonFile } from '../utils/json-helper.js';
 
 /**
  * Verify a ZK proof
@@ -15,12 +16,9 @@ async function verifyProof(proofPath) {
         throw new Error(`Proof file not found: ${proofPath}`);
     }
 
-    let proofData;
-    try {
-        proofData = JSON.parse(fs.readFileSync(proofPath, 'utf8'));
-    } catch (error) {
-        throw new Error(`Failed to parse proof file: ${error.message}`);
-    }
+    const proofData = readAndValidateJsonFile(proofPath, {
+        requiredFields: ['proof', 'publicSignals', 'metadata']
+    });
     console.log('📋 Proof metadata:');
     console.log(`   Voter: ${proofData.metadata.voterAddress}`);
     console.log(`   Topic: ${proofData.metadata.topicId}`);
@@ -34,12 +32,9 @@ async function verifyProof(proofPath) {
         throw new Error('Verification key not found. Run: npm run compile-circuits');
     }
 
-    let vkey;
-    try {
-        vkey = JSON.parse(fs.readFileSync(vkeyPath, 'utf8'));
-    } catch (error) {
-        throw new Error(`Failed to parse verification key file: ${error.message}`);
-    }
+    const vkey = readAndValidateJsonFile(vkeyPath, {
+        requiredFields: ['vk_alpha_1', 'vk_beta_2', 'vk_gamma_2', 'vk_delta_2', 'IC']
+    });
 
     console.log('⚙️  Verifying proof...');
 
@@ -56,10 +51,10 @@ async function verifyProof(proofPath) {
         console.log('✅ PROOF IS VALID!');
         console.log('='.repeat(60));
         console.log('\n📊 Public signals:');
-        console.log(`   Nullifier: ${proofData.publicSignals[0]}`);
-        console.log(`   Merkle root: ${proofData.publicSignals[1]}`);
-        console.log(`   Topic ID: ${proofData.publicSignals[2]}`);
-        console.log(`   Message hash: ${proofData.publicSignals[3]}`);
+        console.log(`   Nullifier: ${proofData.publicSignals[PUBLIC_SIGNAL.NULLIFIER]}`);
+        console.log(`   Merkle root: ${proofData.publicSignals[PUBLIC_SIGNAL.MERKLE_ROOT]}`);
+        console.log(`   Topic ID: ${proofData.publicSignals[PUBLIC_SIGNAL.TOPIC_ID]}`);
+        console.log(`   Message hash: ${proofData.publicSignals[PUBLIC_SIGNAL.MESSAGE_HASH]}`);
         console.log(`   Computed nullifier: ${proofData.metadata.nullifier}`);
 
         console.log('\n✨ This proves that:');
