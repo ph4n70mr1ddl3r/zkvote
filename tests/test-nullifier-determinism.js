@@ -3,10 +3,7 @@ import path from 'path';
 import { ethers } from 'ethers';
 import { signVoteMessage, signatureToFieldElements } from '../utils/eip712.js';
 import { poseidonHashMany } from '../utils/poseidon.js';
-
-/**
- * Test: Nullifier determinism properties
- */
+import { FILE_PATHS } from '../utils/constants.js';
 
 async function testNullifierDeterminism() {
     console.log('\n' + '='.repeat(70));
@@ -14,9 +11,13 @@ async function testNullifierDeterminism() {
     console.log('='.repeat(70) + '\n');
 
     try {
-        // Load valid voters
-        const votersPath = path.join(process.cwd(), 'data', 'valid-voters.json');
-        const voters = JSON.parse(fs.readFileSync(votersPath, 'utf8'));
+        const votersPath = path.join(process.cwd(), FILE_PATHS.data.validVoters);
+        let voters;
+        try {
+            voters = JSON.parse(fs.readFileSync(votersPath, 'utf8'));
+        } catch (error) {
+            throw new Error(`Failed to parse voters file: ${error.message}`);
+        }
 
         const voter1 = voters[0];
         const voter2 = voters[1];

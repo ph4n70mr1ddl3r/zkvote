@@ -5,10 +5,7 @@ import * as snarkjs from 'snarkjs';
 import { signVoteMessage, signatureToFieldElements } from '../utils/eip712.js';
 import { getMerkleProof } from '../utils/merkle-helper.js';
 import { addressToFieldElement, poseidonHashMany } from '../utils/poseidon.js';
-
-/**
- * Test: Valid voter can generate and verify proofs
- */
+import { FILE_PATHS } from '../utils/constants.js';
 
 async function testValidVoter() {
     console.log('\n' + '='.repeat(70));
@@ -16,13 +13,21 @@ async function testValidVoter() {
     console.log('='.repeat(70) + '\n');
 
     try {
-        // Load valid voters
-        const votersPath = path.join(process.cwd(), 'data', 'valid-voters.json');
-        const voters = JSON.parse(fs.readFileSync(votersPath, 'utf8'));
+        const votersPath = path.join(process.cwd(), FILE_PATHS.data.validVoters);
+        let voters;
+        try {
+            voters = JSON.parse(fs.readFileSync(votersPath, 'utf8'));
+        } catch (error) {
+            throw new Error(`Failed to parse voters file: ${error.message}`);
+        }
 
-        // Load Merkle tree
-        const treePath = path.join(process.cwd(), 'data', 'merkle-tree.json');
-        const treeData = JSON.parse(fs.readFileSync(treePath, 'utf8'));
+        const treePath = path.join(process.cwd(), FILE_PATHS.data.merkleTree);
+        let treeData;
+        try {
+            treeData = JSON.parse(fs.readFileSync(treePath, 'utf8'));
+        } catch (error) {
+            throw new Error(`Failed to parse Merkle tree file: ${error.message}`);
+        }
 
         // Test with first voter
         const voterIndex = 0;
@@ -57,15 +62,14 @@ async function testValidVoter() {
 
         const { proof: proof1, publicSignals: ps1 } = await snarkjs.groth16.fullProve(
             input1,
-            path.join(process.cwd(), 'build', 'vote_js', 'vote.wasm'),
-            path.join(process.cwd(), 'build', 'vote.zkey')
+            path.join(process.cwd(), FILE_PATHS.build.wasm),
+            path.join(process.cwd(), FILE_PATHS.build.zkey)
         );
 
         console.log('✓ First proof generated');
 
-        // Verify proof
         const vkey = JSON.parse(fs.readFileSync(
-            path.join(process.cwd(), 'build', 'vote_verification_key.json'),
+            path.join(process.cwd(), FILE_PATHS.build.verificationKey),
             'utf8'
         ));
 

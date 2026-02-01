@@ -4,10 +4,7 @@ import { ethers } from 'ethers';
 import * as snarkjs from 'snarkjs';
 import { signVoteMessage, signatureToFieldElements } from '../utils/eip712.js';
 import { addressToFieldElement } from '../utils/poseidon.js';
-
-/**
- * Test: Invalid voter cannot generate valid proofs
- */
+import { FILE_PATHS, MERKLE_PADDING_VALUE, TREE_DEPTH } from '../utils/constants.js';
 
 async function testInvalidVoter() {
     console.log('\n' + '='.repeat(70));
@@ -15,13 +12,21 @@ async function testInvalidVoter() {
     console.log('='.repeat(70) + '\n');
 
     try {
-        // Load invalid voters
-        const invalidVotersPath = path.join(process.cwd(), 'data', 'invalid-voters.json');
-        const invalidVoters = JSON.parse(fs.readFileSync(invalidVotersPath, 'utf8'));
+        const invalidVotersPath = path.join(process.cwd(), FILE_PATHS.data.invalidVoters);
+        let invalidVoters;
+        try {
+            invalidVoters = JSON.parse(fs.readFileSync(invalidVotersPath, 'utf8'));
+        } catch (error) {
+            throw new Error(`Failed to parse invalid voters file: ${error.message}`);
+        }
 
-        // Load Merkle tree
-        const treePath = path.join(process.cwd(), 'data', 'merkle-tree.json');
-        const treeData = JSON.parse(fs.readFileSync(treePath, 'utf8'));
+        const treePath = path.join(process.cwd(), FILE_PATHS.data.merkleTree);
+        let treeData;
+        try {
+            treeData = JSON.parse(fs.readFileSync(treePath, 'utf8'));
+        } catch (error) {
+            throw new Error(`Failed to parse Merkle tree file: ${error.message}`);
+        }
 
         // Test with first invalid voter
         const voterIndex = 0;
@@ -42,10 +47,9 @@ async function testInvalidVoter() {
         const sig = await signVoteMessage(wallet, topicId, voteMessage);
         const sigFields = signatureToFieldElements(sig);
 
-        // Use fake Merkle proof (all zeros) since voter is not in tree
         const fakeMerkleProof = {
-            siblings: Array(7).fill('0'),
-            pathIndices: Array(7).fill(0)
+            siblings: Array(TREE_DEPTH).fill(MERKLE_PADDING_VALUE),
+            pathIndices: Array(TREE_DEPTH).fill(0)
         };
 
         const input = {

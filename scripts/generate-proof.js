@@ -5,47 +5,75 @@ import * as snarkjs from 'snarkjs';
 import { signVoteMessage, signatureToFieldElements } from '../utils/eip712.js';
 import { getMerkleProof, proofToCircuitInput } from '../utils/merkle-helper.js';
 import { addressToFieldElement, poseidonHashMany } from '../utils/poseidon.js';
+import { DEFAULT_TOPIC_ID, FILE_PATHS, MAX_VOTE_MESSAGE_LENGTH, MERKLE_PADDING_VALUE, TREE_DEPTH } from '../utils/constants.js';
 
 /**
  * Generate a ZK proof for a vote
  * Usage: node scripts/generate-proof.js <voter-index> <vote-message> [--invalid]
  */
 
+function validateVoteMessage(message) {
+    if (typeof message !== 'string') {
+        throw new Error('Vote message must be a string');
+    }
+    if (message.length === 0) {
+        throw new Error('Vote message cannot be empty');
+    }
+    if (message.length > MAX_VOTE_MESSAGE_LENGTH) {
+        throw new Error(`Vote message exceeds maximum length of ${MAX_VOTE_MESSAGE_LENGTH} characters`);
+    }
+}
+
+function validateVoterIndex(index, maxIndex) {
+    if (!Number.isInteger(index) || index < 0) {
+        throw new Error(`Voter index must be a non-negative integer`);
+    }
+    if (index > maxIndex) {
+        throw new Error(`Voter index ${index} exceeds available voters (${maxIndex})`);
+    }
+}
+
 async function generateProof(voterIndex, voteMessage, useInvalid = false) {
     console.log('🔐 Generating ZK proof for vote...\n');
 
-    // Load voters
+    validateVoteMessage(voteMessage);
+
     const voterType = useInvalid ? 'invalid-voters' : 'valid-voters';
-    const votersPath = path.join(process.cwd(), 'data', `${voterType}.json`);
+    const votersPath = path.join(process.cwd(), FILE_PATHS.data[voterType === 'valid-voters' ? 'validVoters' : 'invalidVoters']);
 
     if (!fs.existsSync(votersPath)) {
         throw new Error(`Voters file not found: ${votersPath}`);
     }
 
-    const voters = JSON.parse(fs.readFileSync(votersPath, 'utf8'));
-
-    if (voterIndex < 0 || voterIndex >= voters.length) {
-        throw new Error(`Invalid voter index: ${voterIndex}`);
+    let voters;
+    try {
+        voters = JSON.parse(fs.readFileSync(votersPath, 'utf8'));
+    } catch (error) {
+        throw new Error(`Failed to parse voters file: ${error.message}`);
     }
+
+    validateVoterIndex(voterIndex, voters.length - 1);
 
     const voter = voters[voterIndex];
     console.log(`📋 Voter: ${voter.address} (index ${voterIndex})`);
     console.log(`📝 Vote message: "${voteMessage}"\n`);
 
-    // Load Merkle tree
-    const treePath = path.join(process.cwd(), 'data', 'merkle-tree.json');
+    const treePath = path.join(process.cwd(), FILE_PATHS.data.merkleTree);
     if (!fs.existsSync(treePath)) {
         throw new Error('Merkle tree not found. Run: npm run build-tree');
     }
 
-    const treeData = JSON.parse(fs.readFileSync(treePath, 'utf8'));
+    let treeData;
+    try {
+        treeData = JSON.parse(fs.readFileSync(treePath, 'utf8'));
+    } catch (error) {
+        throw new Error(`Failed to parse Merkle tree file: ${error.message}`);
+    }
     console.log(`🌳 Merkle root: ${treeData.root}`);
 
-    // Create wallet from voter's private key
     const wallet = new ethers.Wallet(voter.privateKey);
 
-    // Define topic ID (same topic for all votes in this demo)
-    const topicId = 'vote-topic-2024';
+    const topicId = DEFAULT_TOPIC_ID;
 
     // Sign the vote message using EIP-712
     console.log('✍️  Signing vote message...');
@@ -56,14 +84,12 @@ async function generateProof(voterIndex, voteMessage, useInvalid = false) {
     console.log(`   Signature s: ${sigFields.s.substring(0, 20)}...`);
     console.log(`   Message hash: ${sig.messageHash}\n`);
 
-    // Generate Merkle proof
     let merkleProof;
     if (useInvalid) {
         console.log('⚠️  Using invalid voter - proof will fail!');
-        // Use a fake proof (all zeros) for invalid voter
         merkleProof = {
-            siblings: Array(7).fill('0'),
-            pathIndices: Array(7).fill(0)
+            siblings: Array(TREE_DEPTH).fill(MERKLE_PADDING_VALUE),
+            pathIndices: Array(TREE_DEPTH).fill(0)
         };
     } else {
         merkleProof = getMerkleProof(treeData.tree, voterIndex);
@@ -86,15 +112,13 @@ async function generateProof(voterIndex, voteMessage, useInvalid = false) {
         sigS: sigFields.s
     };
 
-    // Save input for debugging
-    const inputPath = path.join(process.cwd(), 'build', 'proof_input.json');
+    const inputPath = path.join(process.cwd(), FILE_PATHS.build.proofInput);
     fs.writeFileSync(inputPath, JSON.stringify(input, null, 2));
     console.log(`💾 Circuit input saved to: ${inputPath}\n`);
 
-    // Generate proof
     console.log('⚙️  Generating ZK proof (this may take a moment)...');
-    const wasmPath = path.join(process.cwd(), 'build', 'vote_js', 'vote.wasm');
-    const zkeyPath = path.join(process.cwd(), 'build', 'vote.zkey');
+    const wasmPath = path.join(process.cwd(), FILE_PATHS.build.wasm);
+    const zkeyPath = path.join(process.cwd(), FILE_PATHS.build.zkey);
 
     if (!fs.existsSync(wasmPath) || !fs.existsSync(zkeyPath)) {
         throw new Error('Circuit not compiled. Run: npm run compile-circuits');
@@ -123,7 +147,6 @@ async function generateProof(voterIndex, voteMessage, useInvalid = false) {
     console.log(`   Message hash: ${publicSignals[3]}`);
     console.log(`   Computed nullifier: ${nullifier}\n`);
 
-    // Save proof and public signals
     const proofData = {
         proof,
         publicSignals,
@@ -138,7 +161,7 @@ async function generateProof(voterIndex, voteMessage, useInvalid = false) {
         }
     };
 
-    const proofPath = path.join(process.cwd(), 'build', 'latest_proof.json');
+    const proofPath = path.join(process.cwd(), FILE_PATHS.build.latestProof);
     fs.writeFileSync(proofPath, JSON.stringify(proofData, null, 2));
 
     console.log(`💾 Proof saved to: ${proofPath}`);

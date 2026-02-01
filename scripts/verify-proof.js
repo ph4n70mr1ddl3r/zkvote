@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import * as snarkjs from 'snarkjs';
+import { FILE_PATHS } from '../utils/constants.js';
 
 /**
  * Verify a ZK proof
@@ -10,12 +11,16 @@ import * as snarkjs from 'snarkjs';
 async function verifyProof(proofPath) {
     console.log('🔍 Verifying ZK proof...\n');
 
-    // Load proof
     if (!fs.existsSync(proofPath)) {
         throw new Error(`Proof file not found: ${proofPath}`);
     }
 
-    const proofData = JSON.parse(fs.readFileSync(proofPath, 'utf8'));
+    let proofData;
+    try {
+        proofData = JSON.parse(fs.readFileSync(proofPath, 'utf8'));
+    } catch (error) {
+        throw new Error(`Failed to parse proof file: ${error.message}`);
+    }
     console.log('📋 Proof metadata:');
     console.log(`   Voter: ${proofData.metadata.voterAddress}`);
     console.log(`   Topic: ${proofData.metadata.topicId}`);
@@ -23,14 +28,18 @@ async function verifyProof(proofPath) {
     console.log(`   Timestamp: ${proofData.metadata.timestamp}`);
     console.log(`   Invalid voter: ${proofData.metadata.isInvalidVoter ? 'Yes ⚠️' : 'No'}\n`);
 
-    // Load verification key
-    const vkeyPath = path.join(process.cwd(), 'build', 'vote_verification_key.json');
+    const vkeyPath = path.join(process.cwd(), FILE_PATHS.build.verificationKey);
 
     if (!fs.existsSync(vkeyPath)) {
         throw new Error('Verification key not found. Run: npm run compile-circuits');
     }
 
-    const vkey = JSON.parse(fs.readFileSync(vkeyPath, 'utf8'));
+    let vkey;
+    try {
+        vkey = JSON.parse(fs.readFileSync(vkeyPath, 'utf8'));
+    } catch (error) {
+        throw new Error(`Failed to parse verification key file: ${error.message}`);
+    }
 
     console.log('⚙️  Verifying proof...');
 
@@ -88,8 +97,7 @@ const args = process.argv.slice(2);
 let proofPath;
 
 if (args.length === 0) {
-    // Use default latest proof
-    proofPath = path.join(process.cwd(), 'build', 'latest_proof.json');
+    proofPath = path.join(process.cwd(), FILE_PATHS.build.latestProof);
 } else {
     proofPath = args[0];
 }

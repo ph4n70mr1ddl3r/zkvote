@@ -1,4 +1,5 @@
 import { ethers } from 'ethers';
+import { DOMAIN_CONFIG, VOTE_TYPES } from './constants.js';
 
 /**
  * EIP-712 utilities for deterministic signature generation
@@ -10,27 +11,20 @@ import { ethers } from 'ethers';
  */
 export function createDomain(topicId) {
     return {
-        name: 'ZKVoting',
-        version: '1',
-        chainId: 1, // Ethereum mainnet
-        verifyingContract: '0x0000000000000000000000000000000000000000', // Placeholder
-        salt: ethers.id(topicId) // Topic-specific salt
+        ...DOMAIN_CONFIG,
+        salt: ethers.id(topicId)
     };
 }
 
 /**
  * Create EIP-712 types for vote message
  */
-export const voteTypes = {
-    Vote: [
-        { name: 'topic', type: 'string' }
-    ]
-};
+export const voteTypes = VOTE_TYPES;
 
 /**
  * Create vote message structure
  */
-export function createVoteMessage(topicId, voteMessage, timestamp = null) {
+export function createVoteMessage(topicId) {
     return {
         topic: topicId
     };

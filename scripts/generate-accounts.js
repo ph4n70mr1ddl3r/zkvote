@@ -1,6 +1,7 @@
 import { ethers } from 'ethers';
 import fs from 'fs';
 import path from 'path';
+import { FILE_PATHS } from '../utils/constants.js';
 
 /**
  * Generate Ethereum accounts for testing the ZKP voting system
@@ -35,19 +36,17 @@ async function main() {
         fs.mkdirSync(dataDir, { recursive: true });
     }
 
-    // Generate valid voters
     console.log(`Generating ${NUM_ACCOUNTS} valid voter accounts...`);
     const validVoters = generateAccounts(NUM_ACCOUNTS);
-    const validVotersPath = path.join(dataDir, 'valid-voters.json');
+    const validVotersPath = path.join(process.cwd(), FILE_PATHS.data.validVoters);
     fs.writeFileSync(validVotersPath, JSON.stringify(validVoters, null, 2));
     console.log(`✅ Valid voters saved to: ${validVotersPath}`);
     console.log(`   First address: ${validVoters[0].address}`);
     console.log(`   Last address:  ${validVoters[NUM_ACCOUNTS - 1].address}\n`);
 
-    // Generate invalid voters
     console.log(`Generating ${NUM_ACCOUNTS} invalid voter accounts...`);
     const invalidVoters = generateAccounts(NUM_ACCOUNTS);
-    const invalidVotersPath = path.join(dataDir, 'invalid-voters.json');
+    const invalidVotersPath = path.join(process.cwd(), FILE_PATHS.data.invalidVoters);
     fs.writeFileSync(invalidVotersPath, JSON.stringify(invalidVoters, null, 2));
     console.log(`✅ Invalid voters saved to: ${invalidVotersPath}`);
     console.log(`   First address: ${invalidVoters[0].address}`);

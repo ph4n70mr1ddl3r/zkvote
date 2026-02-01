@@ -3,15 +3,13 @@ import { promisify } from 'util';
 import fs from 'fs';
 import path from 'path';
 import https from 'https';
+import { CIRCUIT_CONFIG } from '../utils/constants.js';
 
 const execAsync = promisify(exec);
 
 /**
  * Compile Circom circuits and generate proving/verification keys
  */
-
-const CIRCUIT_NAME = 'vote';
-const PTAU_SIZE = 15; // Powers of tau for circuit size (increased for 4241 constraints)
 
 async function downloadFile(url, filepath) {
     return new Promise((resolve, reject) => {
@@ -58,8 +56,8 @@ async function main() {
         fs.mkdirSync(buildDir, { recursive: true });
     }
 
-    const circuitPath = path.join(process.cwd(), 'circuits', `${CIRCUIT_NAME}.circom`);
-    const buildPath = path.join(buildDir, CIRCUIT_NAME);
+    const circuitPath = path.join(process.cwd(), 'circuits', `${CIRCUIT_CONFIG.CIRCUIT_NAME}.circom`);
+    const buildPath = path.join(buildDir, CIRCUIT_CONFIG.CIRCUIT_NAME);
 
     // Check if circom is installed
     try {
@@ -81,40 +79,36 @@ async function main() {
         'Compiling circuit'
     );
 
-    // 2. Download powers of tau if not exists
-    const ptauPath = path.join(buildDir, `powersOfTau28_hez_final_${PTAU_SIZE}.ptau`);
+    const ptauPath = path.join(buildDir, `powersOfTau28_hez_final_${CIRCUIT_CONFIG.PTAU_SIZE}.ptau`);
     if (!fs.existsSync(ptauPath)) {
-        console.log(`\n📥 Downloading powers of tau (size ${PTAU_SIZE})...`);
-        const ptauUrl = `https://storage.googleapis.com/zkevm/ptau/powersOfTau28_hez_final_${PTAU_SIZE}.ptau`;
+        console.log(`\n📥 Downloading powers of tau (size ${CIRCUIT_CONFIG.PTAU_SIZE})...`);
+        const ptauUrl = `https://storage.googleapis.com/zkevm/ptau/powersOfTau28_hez_final_${CIRCUIT_CONFIG.PTAU_SIZE}.ptau`;
         await downloadFile(ptauUrl, ptauPath);
         console.log('✅ Powers of tau downloaded');
     } else {
         console.log(`\n✓ Powers of tau already exists`);
     }
 
-    // 3. Generate proving key
-    const zkeyPath = path.join(buildDir, `${CIRCUIT_NAME}.zkey`);
+    const zkeyPath = path.join(buildDir, `${CIRCUIT_CONFIG.CIRCUIT_NAME}.zkey`);
     await runCommand(
         `snarkjs groth16 setup ${buildPath}.r1cs ${ptauPath} ${zkeyPath}`,
         'Generating proving key'
     );
 
-    // 4. Export verification key
-    const vkeyPath = path.join(buildDir, `${CIRCUIT_NAME}_verification_key.json`);
+    const vkeyPath = path.join(buildDir, `${CIRCUIT_CONFIG.CIRCUIT_NAME}_verification_key.json`);
     await runCommand(
         `snarkjs zkey export verificationkey ${zkeyPath} ${vkeyPath}`,
         'Exporting verification key'
     );
 
-    // 5. Export Solidity verifier (optional, for on-chain verification)
-    const verifierPath = path.join(buildDir, `${CIRCUIT_NAME}_verifier.sol`);
+    const verifierPath = path.join(buildDir, `${CIRCUIT_CONFIG.CIRCUIT_NAME}_verifier.sol`);
     await runCommand(
         `snarkjs zkey export solidityverifier ${zkeyPath} ${verifierPath}`,
         'Generating Solidity verifier'
     );
 
     console.log('\n🎉 Circuit compilation complete!');
-    console.log(`   Circuit: ${CIRCUIT_NAME}.circom`);
+    console.log(`   Circuit: ${CIRCUIT_CONFIG.CIRCUIT_NAME}.circom`);
     console.log(`   R1CS: ${buildPath}.r1cs`);
     console.log(`   WASM: ${buildPath}_js/${CIRCUIT_NAME}.wasm`);
     console.log(`   Proving key: ${zkeyPath}`);

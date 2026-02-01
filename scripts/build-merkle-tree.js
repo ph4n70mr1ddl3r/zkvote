@@ -1,16 +1,12 @@
 import fs from 'fs';
 import path from 'path';
 import { buildMerkleTree } from '../utils/merkle-helper.js';
-
-/**
- * Build Merkle tree from valid voter addresses
- */
+import { FILE_PATHS } from '../utils/constants.js';
 
 async function main() {
     console.log('🌳 Building Merkle tree from valid voters...\n');
 
-    // Load valid voters
-    const validVotersPath = path.join(process.cwd(), 'data', 'valid-voters.json');
+    const validVotersPath = path.join(process.cwd(), FILE_PATHS.data.validVoters);
 
     if (!fs.existsSync(validVotersPath)) {
         console.error('❌ Error: valid-voters.json not found!');
@@ -18,7 +14,14 @@ async function main() {
         process.exit(1);
     }
 
-    const validVoters = JSON.parse(fs.readFileSync(validVotersPath, 'utf8'));
+    let validVoters;
+    try {
+        validVoters = JSON.parse(fs.readFileSync(validVotersPath, 'utf8'));
+    } catch (error) {
+        console.error('❌ Error: Failed to parse valid-voters.json!');
+        console.error(`   ${error.message}`);
+        process.exit(1);
+    }
     console.log(`📋 Loaded ${validVoters.length} valid voter addresses`);
 
     // Extract addresses
@@ -28,8 +31,7 @@ async function main() {
     console.log('🔨 Building Merkle tree...');
     const merkleTree = await buildMerkleTree(addresses);
 
-    // Save tree
-    const treePath = path.join(process.cwd(), 'data', 'merkle-tree.json');
+    const treePath = path.join(process.cwd(), FILE_PATHS.data.merkleTree);
     const treeData = {
         root: merkleTree.root,
         depth: 7,

@@ -5,10 +5,7 @@ import * as snarkjs from 'snarkjs';
 import { signVoteMessage, signatureToFieldElements } from '../utils/eip712.js';
 import { getMerkleProof } from '../utils/merkle-helper.js';
 import { addressToFieldElement, poseidonHashMany } from '../utils/poseidon.js';
-
-/**
- * Test: Double voting prevention via nullifier tracking
- */
+import { FILE_PATHS } from '../utils/constants.js';
 
 async function testDoubleVoting() {
     console.log('\n' + '='.repeat(70));
@@ -16,19 +13,31 @@ async function testDoubleVoting() {
     console.log('='.repeat(70) + '\n');
 
     try {
-        // Load valid voters
-        const votersPath = path.join(process.cwd(), 'data', 'valid-voters.json');
-        const voters = JSON.parse(fs.readFileSync(votersPath, 'utf8'));
+        const votersPath = path.join(process.cwd(), FILE_PATHS.data.validVoters);
+        let voters;
+        try {
+            voters = JSON.parse(fs.readFileSync(votersPath, 'utf8'));
+        } catch (error) {
+            throw new Error(`Failed to parse voters file: ${error.message}`);
+        }
 
-        // Load Merkle tree
-        const treePath = path.join(process.cwd(), 'data', 'merkle-tree.json');
-        const treeData = JSON.parse(fs.readFileSync(treePath, 'utf8'));
+        const treePath = path.join(process.cwd(), FILE_PATHS.data.merkleTree);
+        let treeData;
+        try {
+            treeData = JSON.parse(fs.readFileSync(treePath, 'utf8'));
+        } catch (error) {
+            throw new Error(`Failed to parse Merkle tree file: ${error.message}`);
+        }
 
-        // Load verification key
-        const vkey = JSON.parse(fs.readFileSync(
-            path.join(process.cwd(), 'build', 'vote_verification_key.json'),
-            'utf8'
-        ));
+        let vkey;
+        try {
+            vkey = JSON.parse(fs.readFileSync(
+                path.join(process.cwd(), FILE_PATHS.build.verificationKey),
+                'utf8'
+            ));
+        } catch (error) {
+            throw new Error(`Failed to parse verification key file: ${error.message}`);
+        }
 
         const voterIndex = 0;
         const voter = voters[voterIndex];
@@ -67,8 +76,8 @@ async function testDoubleVoting() {
 
         const { proof: proof1, publicSignals: ps1 } = await snarkjs.groth16.fullProve(
             input1,
-            path.join(process.cwd(), 'build', 'vote_js', 'vote.wasm'),
-            path.join(process.cwd(), 'build', 'vote.zkey')
+            path.join(process.cwd(), FILE_PATHS.build.wasm),
+            path.join(process.cwd(), FILE_PATHS.build.zkey)
         );
 
         const isValid1 = await snarkjs.groth16.verify(vkey, ps1, proof1);
@@ -111,8 +120,8 @@ async function testDoubleVoting() {
 
         const { proof: proof2, publicSignals: ps2 } = await snarkjs.groth16.fullProve(
             input2,
-            path.join(process.cwd(), 'build', 'vote_js', 'vote.wasm'),
-            path.join(process.cwd(), 'build', 'vote.zkey')
+            path.join(process.cwd(), FILE_PATHS.build.wasm),
+            path.join(process.cwd(), FILE_PATHS.build.zkey)
         );
 
         const isValid2 = await snarkjs.groth16.verify(vkey, ps2, proof2);

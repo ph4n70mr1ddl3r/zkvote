@@ -1,10 +1,9 @@
 import { poseidonHash2, addressToFieldElement } from './poseidon.js';
+import { TREE_DEPTH, MERKLE_PADDING_VALUE } from './constants.js';
 
 /**
  * Merkle tree helper functions for proof generation and verification
  */
-
-const TREE_DEPTH = 7; // Support up to 128 leaves
 
 /**
  * Build a Merkle tree from addresses
@@ -17,7 +16,7 @@ export async function buildMerkleTree(addresses) {
     const paddedLeaves = [...leaves];
     const targetSize = 2 ** TREE_DEPTH;
     while (paddedLeaves.length < targetSize) {
-        paddedLeaves.push('0');
+        paddedLeaves.push(MERKLE_PADDING_VALUE);
     }
 
     // Build tree level by level
