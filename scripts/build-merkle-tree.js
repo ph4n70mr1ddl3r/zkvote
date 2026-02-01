@@ -18,7 +18,13 @@ async function main() {
 
         const validVoters = readAndValidateJsonFile(validVotersPath, {
             isArray: true,
+            nonEmpty: true,
         });
+
+        if (validVoters.length === 0) {
+            throw new Error('No valid voters found. Please run: npm run generate-accounts');
+        }
+
         console.log(`📋 Loaded ${validVoters.length} valid voter addresses`);
 
         // Extract addresses

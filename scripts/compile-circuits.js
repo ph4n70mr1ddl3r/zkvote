@@ -58,8 +58,8 @@ async function runCommand(command, description) {
         if (stdout) {
             console.log(stdout);
         }
-        if (stderr && !stderr.includes('Warning')) {
-            console.error(stderr);
+        if (stderr) {
+            console.warn(`⚠️  Warning from ${description}:`, stderr);
         }
         console.log(`✅ ${description} complete`);
     } catch (error) {

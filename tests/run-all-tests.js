@@ -43,8 +43,10 @@ async function runTest(test) {
         if (stdout) {
             console.log(stdout);
         }
-        if (stderr && !stderr.includes('ExperimentalWarning')) {
-            console.log('Stderr:', stderr);
+        if (stderr) {
+            if (!stderr.includes('ExperimentalWarning')) {
+                console.warn('Stderr:', stderr);
+            }
         }
 
         console.log(`\n✅ ${test.name} PASSED`);

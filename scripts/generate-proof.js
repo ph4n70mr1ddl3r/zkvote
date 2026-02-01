@@ -116,7 +116,7 @@ async function generateProof(voterIndex, voteMessage, useInvalid = false) {
 
         // Prepare circuit inputs
         const voterAddressField = addressToFieldElement(voter.address);
-        const topicIdHash = BigInt(ethers.id(topicId)).toString();
+        const topicIdHash = BigInt(ethers.id(topicId));
         const messageHashField = BigInt(sig.messageHash).toString();
 
         const input = {

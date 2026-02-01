@@ -17,11 +17,17 @@ async function verifyProof(proofPath) {
     }
 
     try {
-        if (!fs.existsSync(proofPath)) {
+        const resolvedPath = path.resolve(proofPath);
+        if (!fs.existsSync(resolvedPath)) {
             throw new Error(`Proof file not found: ${proofPath}`);
         }
 
-        const proofData = readAndValidateJsonFile(proofPath, {
+        const stats = fs.statSync(resolvedPath);
+        if (!stats.isFile()) {
+            throw new Error(`Proof path is not a file: ${proofPath}`);
+        }
+
+        const proofData = readAndValidateJsonFile(resolvedPath, {
             requiredFields: ['proof', 'publicSignals', 'metadata'],
         });
 

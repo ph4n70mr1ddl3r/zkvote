@@ -14,9 +14,9 @@ include "../node_modules/circomlib/circuits/poseidon.circom";
 template Vote(levels) {
     // Public inputs
     signal input merkleRoot;          // Merkle root of valid voters
-    signal input topicId;              // Voting topic identifier
-    signal input messageHash;          // Hash of vote message
-    
+    signal input topicId;              // Voting topic identifier (used in nullifier)
+    signal input messageHash;          // Hash of vote message (currently unused, kept for future use)
+
     // Private inputs
     signal input voterAddress;         // Voter's Ethereum address
     signal input pathElements[levels]; // Merkle proof
@@ -47,4 +47,7 @@ template Vote(levels) {
     // or validate signatures outside of the ZK proof
 }
 
+// Note: TREE_DEPTH=7 is hardcoded here to match utils/constants.js
+// If changing TREE_DEPTH, update both files
 component main {public [merkleRoot, topicId, messageHash]} = Vote(7);
+
