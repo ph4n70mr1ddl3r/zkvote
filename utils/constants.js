@@ -108,6 +108,8 @@ export const PUBLIC_SIGNAL = {
     MESSAGE_HASH: 3,
 };
 
+export const EXPECTED_PUBLIC_SIGNALS_COUNT = 4;
+
 /**
  * Display widths for console output
  */

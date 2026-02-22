@@ -87,6 +87,7 @@ npm run generate-accounts
 ```
 
 Creates:
+
 - `data/valid-voters.json` - 100 valid voter accounts
 - `data/invalid-voters.json` - 100 invalid voter accounts
 
@@ -105,6 +106,7 @@ npm run compile-circuits
 ```
 
 This will:
+
 - Compile the Circom circuits
 - Download powers of tau
 - Generate proving and verification keys
@@ -119,6 +121,7 @@ npm test
 ```
 
 Runs all test suites:
+
 - ✅ Valid voter proof generation
 - ✅ Invalid voter rejection
 - ✅ Nullifier determinism
@@ -150,6 +153,7 @@ node scripts/generate-proof.js 5 "Vote for Option B"
 ```
 
 Output includes:
+
 - Voter address
 - Merkle root
 - Signature components
@@ -216,10 +220,11 @@ Instead of using private keys directly in the circuit (which would expose them),
 Nullifiers prevent double voting:
 
 ```
-nullifier = Poseidon(signature_r, signature_s, topic_id)
+nullifier = Poseidon(sig_r, sig_s, topic_id_hash, message_hash)
 ```
 
 Properties:
+
 - **Deterministic**: Same voter voting on same topic generates same nullifier
 - **Unique per topic**: Different topics generate different nullifiers
 - **Unique per voter**: Different voters generate different nullifiers
@@ -240,14 +245,17 @@ The main circuit (`vote.circom`) proves:
 3. **Message**: Vote message hash is included in the proof
 
 Public inputs:
+
 - Merkle root
 - Topic ID
 - Message hash
 
 Public output:
+
 - Nullifier
 
 Private inputs:
+
 - Voter address
 - Merkle proof (path elements + indices)
 - Signature components (r, s)
@@ -257,11 +265,13 @@ Private inputs:
 ### Test Suite
 
 Run all tests:
+
 ```bash
 npm test
 ```
 
 Run individual tests:
+
 ```bash
 npm run test:valid         # Valid voter tests
 npm run test:invalid       # Invalid voter tests
@@ -272,22 +282,26 @@ npm run test:double-vote   # Double voting prevention
 ### What's Tested
 
 ✅ **Valid Voter Test**
+
 - Valid voters can generate proofs
 - Proofs verify correctly
 - Nullifiers are deterministic
 - Merkle root validation works
 
 ✅ **Invalid Voter Test**
+
 - Invalid voters cannot generate valid proofs
 - Proofs with fake Merkle paths fail verification
 - System correctly rejects invalid voters
 
 ✅ **Nullifier Determinism Test**
+
 - Same voter + same topic = same nullifier
 - Same voter + different topic = different nullifier
 - Different voter + same topic = different nullifier
 
 ✅ **Double Voting Prevention Test**
+
 - First vote succeeds and registers nullifier
 - Second vote on same topic generates same nullifier
 - Nullifier registry detects duplicate

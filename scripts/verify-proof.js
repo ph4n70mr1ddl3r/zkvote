@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import * as snarkjs from 'snarkjs';
-import { FILE_PATHS, PUBLIC_SIGNAL } from '../utils/constants.js';
+import { FILE_PATHS, PUBLIC_SIGNAL, EXPECTED_PUBLIC_SIGNALS_COUNT } from '../utils/constants.js';
 import { readAndValidateJsonFile } from '../utils/json-helper.js';
 
 const MAX_PROOF_FILE_SIZE_BYTES = 10 * 1024 * 1024;
@@ -13,27 +13,16 @@ function validatePathSafety(proofPath) {
         throw new Error('Invalid path: must be a non-empty string');
     }
 
+    if (proofPath.length > 4096) {
+        throw new Error('Path exceeds maximum length');
+    }
+
+    if (!/^[a-zA-Z0-9_\-/.]+$/.test(proofPath)) {
+        throw new Error('Invalid path: contains forbidden characters');
+    }
+
     const resolvedPath = path.resolve(proofPath);
     const cwd = process.cwd();
-
-    const dangerousPatterns = [
-        '../',
-        '..\\',
-        '\0',
-        '%2e%2e',
-        '%252e',
-        '%2e%2e%2f',
-        '%2e%2e/',
-        '..%5c',
-        '..%255c',
-        '%252e%252e',
-    ];
-    const lowerPath = proofPath.toLowerCase();
-    for (const pattern of dangerousPatterns) {
-        if (lowerPath.includes(pattern.toLowerCase())) {
-            throw new Error('Invalid path: contains forbidden pattern');
-        }
-    }
 
     if (!resolvedPath.startsWith(cwd)) {
         throw new Error('Path traversal detected: proof path must be within project directory');
@@ -89,6 +78,11 @@ async function verifyProof(proofPath) {
 
         if (!Array.isArray(proofData.publicSignals)) {
             throw new Error('Invalid proof structure: publicSignals must be an array');
+        }
+        if (proofData.publicSignals.length !== EXPECTED_PUBLIC_SIGNALS_COUNT) {
+            throw new Error(
+                `Invalid proof structure: expected ${EXPECTED_PUBLIC_SIGNALS_COUNT} public signals, got ${proofData.publicSignals.length}`
+            );
         }
 
         console.log('📋 Proof metadata:');

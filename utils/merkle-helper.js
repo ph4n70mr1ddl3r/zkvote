@@ -24,7 +24,16 @@ export async function buildMerkleTree(addresses) {
         );
     }
 
-    const normalizedAddresses = addresses.map(addr => addr.toLowerCase());
+    const ETHEREUM_ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
+    const normalizedAddresses = addresses.map(addr => {
+        if (typeof addr !== 'string') {
+            throw new TypeError(`Address must be a string, received ${typeof addr}`);
+        }
+        if (!ETHEREUM_ADDRESS_REGEX.test(addr)) {
+            throw new Error(`Invalid Ethereum address format: ${addr}`);
+        }
+        return addr.toLowerCase();
+    });
     const uniqueAddresses = new Set(normalizedAddresses);
     if (uniqueAddresses.size !== normalizedAddresses.length) {
         throw new Error('Duplicate addresses detected in voter list');

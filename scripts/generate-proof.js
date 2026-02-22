@@ -15,6 +15,8 @@ import {
     DEFAULT_TOPIC_ID,
     FILE_PATHS,
     MAX_VOTE_MESSAGE_LENGTH,
+    MAX_TOPIC_ID_LENGTH,
+    TOPIC_ID_PATTERN,
     MERKLE_PADDING_VALUE,
     TREE_DEPTH,
     PUBLIC_SIGNAL,
@@ -45,6 +47,25 @@ function validateVoteMessage(message) {
     }
 }
 
+function validateTopicId(topicId) {
+    if (typeof topicId !== 'string') {
+        throw new TypeError(`Topic ID must be a string, received ${typeof topicId}`);
+    }
+    if (topicId.length === 0) {
+        throw new Error('Topic ID cannot be empty');
+    }
+    if (topicId.length > MAX_TOPIC_ID_LENGTH) {
+        throw new Error(
+            `Topic ID exceeds maximum length of ${MAX_TOPIC_ID_LENGTH} characters (received ${topicId.length})`
+        );
+    }
+    if (!TOPIC_ID_PATTERN.test(topicId)) {
+        throw new Error(
+            'Topic ID contains invalid characters (alphanumeric, underscore, dash only)'
+        );
+    }
+}
+
 function validateVoterIndex(index, maxIndex) {
     if (!Number.isInteger(index)) {
         throw new TypeError(`Voter index must be an integer, got ${typeof index}`);
@@ -57,11 +78,20 @@ function validateVoterIndex(index, maxIndex) {
     }
 }
 
-async function generateProof(voterIndex, voteMessage, useInvalid = false) {
+async function generateProof(
+    voterIndex,
+    voteMessage,
+    useInvalid = false,
+    topicId = DEFAULT_TOPIC_ID,
+    verbose = true
+) {
     console.log('🔐 Generating ZK proof for vote...\n');
+
+    const PROOF_GENERATION_TIMEOUT_MS = 120000;
 
     try {
         validateVoteMessage(voteMessage);
+        validateTopicId(topicId);
 
         const votersPath = path.join(
             process.cwd(),
@@ -94,16 +124,17 @@ async function generateProof(voterIndex, voteMessage, useInvalid = false) {
 
         const wallet = new ethers.Wallet(voter.privateKey);
 
-        const topicId = DEFAULT_TOPIC_ID;
-
-        // Sign the vote message using EIP-712
         console.log('✍️  Signing vote message...');
         const sig = await signVoteMessage(wallet, topicId);
         const sigFields = signatureToFieldElements(sig);
 
-        console.log(`   Signature r: ${sigFields.r.substring(0, 20)}...`);
-        console.log(`   Signature s: ${sigFields.s.substring(0, 20)}...`);
-        console.log(`   Message hash: ${sig.messageHash}\n`);
+        if (verbose) {
+            console.log(`   Signature r: ${sigFields.r.substring(0, 20)}...`);
+            console.log(`   Signature s: ${sigFields.s.substring(0, 20)}...`);
+            console.log(`   Message hash: ${sig.messageHash}\n`);
+        } else {
+            console.log('   Signature generated.\n');
+        }
 
         let merkleProof;
         if (useInvalid) {
@@ -120,7 +151,10 @@ async function generateProof(voterIndex, voteMessage, useInvalid = false) {
         const voterAddressField = addressToFieldElement(voter.address);
 
         const topicIdHash = BigInt(ethers.id(topicId));
-        const messageHashField = BigInt(sig.messageHash).toString();
+        const messageHashField =
+            typeof sig.messageHash === 'bigint'
+                ? sig.messageHash.toString()
+                : BigInt(sig.messageHash).toString();
 
         validateEcdsaScalar(sigFields.r, 'Signature r');
         validateEcdsaScalar(sigFields.s, 'Signature s');
@@ -161,7 +195,20 @@ async function generateProof(voterIndex, voteMessage, useInvalid = false) {
             throw new Error('Circuit not compiled. Run: npm run compile-circuits');
         }
 
-        const { proof, publicSignals } = await snarkjs.groth16.fullProve(input, wasmPath, zkeyPath);
+        const proofPromise = snarkjs.groth16.fullProve(input, wasmPath, zkeyPath);
+        const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(
+                () =>
+                    reject(
+                        new Error(
+                            `Proof generation timed out after ${PROOF_GENERATION_TIMEOUT_MS / 1000}s`
+                        )
+                    ),
+                PROOF_GENERATION_TIMEOUT_MS
+            );
+        });
+
+        const { proof, publicSignals } = await Promise.race([proofPromise, timeoutPromise]);
 
         if (!proof || typeof proof !== 'object') {
             throw new Error('Invalid proof generated: proof is missing or not an object');
@@ -216,20 +263,42 @@ async function generateProof(voterIndex, voteMessage, useInvalid = false) {
 const args = process.argv.slice(2);
 
 if (args.length < 2) {
-    console.error('Usage: node generate-proof.js <voter-index> <vote-message> [--invalid]');
+    console.error(
+        'Usage: node generate-proof.js <voter-index> <vote-message> [--invalid] [--topic <id>] [--quiet]'
+    );
     console.error('Example: node generate-proof.js 0 "Vote for Proposal A"');
     console.error('Example: node generate-proof.js --invalid 0 "Vote for Proposal B"');
+    console.error(
+        'Example: node generate-proof.js 0 "Vote for Proposal A" --topic custom-topic-2024'
+    );
     process.exit(1);
 }
 
 let voterIndex;
 let voteMessage;
 let useInvalid = false;
+let topicId = DEFAULT_TOPIC_ID;
+let verbose = true;
 
-if (args[0] === '--invalid') {
-    useInvalid = true;
-    voterIndex = parseInt(args[1], 10);
-    voteMessage = args.slice(2).join(' ').trim();
+const parsedArgs = [];
+for (let i = 0; i < args.length; i++) {
+    if (args[i] === '--invalid') {
+        useInvalid = true;
+    } else if (args[i] === '--topic' && i + 1 < args.length) {
+        topicId = args[++i];
+    } else if (args[i] === '--quiet') {
+        verbose = false;
+    } else {
+        parsedArgs.push(args[i]);
+    }
+}
+
+if (parsedArgs.length >= 2) {
+    voterIndex = parseInt(parsedArgs[0], 10);
+    voteMessage = parsedArgs.slice(1).join(' ').trim();
+} else if (parsedArgs.length === 1 && useInvalid) {
+    voterIndex = parseInt(parsedArgs[0], 10);
+    voteMessage = parsedArgs.slice(1).join(' ').trim();
 } else {
     voterIndex = parseInt(args[0], 10);
     voteMessage = args.slice(1).join(' ').trim();
@@ -245,7 +314,7 @@ if (!voteMessage || voteMessage.length === 0) {
     process.exit(1);
 }
 
-generateProof(voterIndex, voteMessage, useInvalid)
+generateProof(voterIndex, voteMessage, useInvalid, topicId, verbose)
     .then(() => {
         console.log('\n✅ Done!');
         process.exit(0);

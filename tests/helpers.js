@@ -45,6 +45,16 @@ export async function buildCircuitInput(
     treeData,
     useFakeProof = false
 ) {
+    if (!treeData || typeof treeData !== 'object') {
+        throw new Error('Invalid treeData: must be an object');
+    }
+    if (!treeData.root || !treeData.tree || !treeData.leaves) {
+        throw new Error('Invalid treeData: missing required properties (root, tree, leaves)');
+    }
+    if (!wallet || typeof wallet.address !== 'string') {
+        throw new Error('Invalid wallet: must have address property');
+    }
+
     const sig = await signVoteMessage(wallet, topicId);
     const sigFields = signatureToFieldElements(sig);
 
