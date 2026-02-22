@@ -1,10 +1,10 @@
-import path from 'path';
-import { ethers } from 'ethers';
-import * as snarkjs from 'snarkjs';
-import { signVoteMessage, signatureToFieldElements } from '../utils/eip712.js';
-import { addressToFieldElement } from '../utils/poseidon.js';
-import { FILE_PATHS, MERKLE_PADDING_VALUE, TREE_DEPTH, DISPLAY_WIDTH } from '../utils/constants.js';
-import { readAndValidateJsonFile } from '../utils/json-helper.js';
+import { DISPLAY_WIDTH } from '../utils/constants.js';
+import {
+    loadTestFixtures,
+    getWallet,
+    buildCircuitInput,
+    generateAndVerifyProof,
+} from './helpers.js';
 
 async function testInvalidVoter() {
     console.log('\n' + '='.repeat(DISPLAY_WIDTH.STANDARD));
@@ -12,21 +12,14 @@ async function testInvalidVoter() {
     console.log('='.repeat(DISPLAY_WIDTH.STANDARD) + '\n');
 
     try {
-        const invalidVotersPath = path.join(process.cwd(), FILE_PATHS.data.invalidVoters);
-        const invalidVoters = readAndValidateJsonFile(invalidVotersPath, {
-            isArray: true,
-        });
-
-        const treePath = path.join(process.cwd(), FILE_PATHS.data.merkleTree);
-        const treeData = readAndValidateJsonFile(treePath, {
-            requiredFields: ['root', 'tree', 'leaves'],
-        });
+        const { invalidVoters, treeData, vkey } = loadTestFixtures();
 
         const voterIndex = 0;
-        const voter = invalidVoters[voterIndex];
-        const wallet = new ethers.Wallet(voter.privateKey);
+        const wallet = getWallet(invalidVoters, voterIndex);
 
-        console.log(`✓ Testing with INVALID voter ${voterIndex}: ${voter.address}`);
+        console.log(
+            `✓ Testing with INVALID voter ${voterIndex}: ${invalidVoters[voterIndex].address}`
+        );
         console.log('  (This address is NOT in the Merkle tree)\n');
 
         const topicId = 'test-topic';
@@ -34,49 +27,16 @@ async function testInvalidVoter() {
         console.log(`✓ Topic: ${topicId}\n`);
 
         console.log('⚙️  Attempting to generate proof...');
-        const sig = await signVoteMessage(wallet, topicId);
-        const sigFields = signatureToFieldElements(sig);
-
-        const fakeMerkleProof = {
-            siblings: Array(TREE_DEPTH).fill(MERKLE_PADDING_VALUE),
-            pathIndices: Array(TREE_DEPTH).fill(0),
-        };
-
-        const input = {
-            merkleRoot: treeData.root,
-            topicId: BigInt(ethers.id(topicId)).toString(),
-            messageHash: BigInt(sig.messageHash).toString(),
-            voterAddress: addressToFieldElement(voter.address),
-            pathElements: fakeMerkleProof.siblings,
-            pathIndices: fakeMerkleProof.pathIndices,
-            sigR: sigFields.r,
-            sigS: sigFields.s,
-            sigV: sigFields.v,
-        };
+        const { input } = await buildCircuitInput(wallet, voterIndex, topicId, treeData, true);
 
         console.log('⚠️  Note: Using fake Merkle proof (voter not in tree)');
         console.log('   Expected: Proof generation will succeed but verification will fail\n');
 
-        let proof, publicSignals;
+        let isValid;
 
         try {
-            const result = await snarkjs.groth16.fullProve(
-                input,
-                path.join(process.cwd(), FILE_PATHS.build.wasm),
-                path.join(process.cwd(), FILE_PATHS.build.zkey)
-            );
-
-            if (!result.proof || typeof result.proof !== 'object') {
-                throw new Error('Invalid proof generated: proof is missing or not an object');
-            }
-            if (!result.publicSignals || !Array.isArray(result.publicSignals)) {
-                throw new Error(
-                    'Invalid proof generated: publicSignals is missing or not an array'
-                );
-            }
-
-            proof = result.proof;
-            publicSignals = result.publicSignals;
+            const result = await generateAndVerifyProof(input, vkey);
+            isValid = result.isValid;
 
             console.log('✓ Proof generated (but will not verify)\n');
         } catch (error) {
@@ -86,17 +46,7 @@ async function testInvalidVoter() {
             return true;
         }
 
-        // Try to verify the proof
-        console.log('⚙️  Attempting to verify proof...');
-        const vkey = readAndValidateJsonFile(
-            path.join(process.cwd(), FILE_PATHS.build.verificationKey),
-            {
-                requiredFields: ['vk_alpha_1', 'vk_beta_2', 'vk_gamma_2', 'vk_delta_2', 'IC'],
-            }
-        );
-
-        const isValid = await snarkjs.groth16.verify(vkey, publicSignals, proof);
-
+        console.log('⚙️  Verifying proof...');
         console.log(`   Verification result: ${isValid ? 'VALID ❌' : 'INVALID ✓'}\n`);
 
         if (isValid) {

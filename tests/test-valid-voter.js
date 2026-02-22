@@ -1,11 +1,12 @@
-import path from 'path';
 import { ethers } from 'ethers';
-import * as snarkjs from 'snarkjs';
-import { signVoteMessage, signatureToFieldElements } from '../utils/eip712.js';
-import { getMerkleProof } from '../utils/merkle-helper.js';
-import { addressToFieldElement, computeNullifier } from '../utils/poseidon.js';
-import { FILE_PATHS, PUBLIC_SIGNAL, DISPLAY_WIDTH } from '../utils/constants.js';
-import { readAndValidateJsonFile } from '../utils/json-helper.js';
+import { computeNullifier } from '../utils/poseidon.js';
+import { PUBLIC_SIGNAL, DISPLAY_WIDTH } from '../utils/constants.js';
+import {
+    loadTestFixtures,
+    getWallet,
+    buildCircuitInput,
+    generateAndVerifyProof,
+} from './helpers.js';
 
 async function testValidVoter() {
     console.log('\n' + '='.repeat(DISPLAY_WIDTH.STANDARD));
@@ -13,67 +14,28 @@ async function testValidVoter() {
     console.log('='.repeat(DISPLAY_WIDTH.STANDARD) + '\n');
 
     try {
-        const votersPath = path.join(process.cwd(), FILE_PATHS.data.validVoters);
-        const voters = readAndValidateJsonFile(votersPath, {
-            isArray: true,
-        });
-
-        const treePath = path.join(process.cwd(), FILE_PATHS.data.merkleTree);
-        const treeData = readAndValidateJsonFile(treePath, {
-            requiredFields: ['root', 'tree', 'leaves'],
-        });
+        const { voters, treeData, vkey } = loadTestFixtures();
 
         const voterIndex = 0;
-        const voter = voters[voterIndex];
-        const wallet = new ethers.Wallet(voter.privateKey);
+        const wallet = getWallet(voters, voterIndex);
 
-        console.log(`✓ Testing with voter ${voterIndex}: ${voter.address}`);
+        console.log(`✓ Testing with voter ${voterIndex}: ${voters[voterIndex].address}`);
 
         const topicId = 'test-topic';
 
         console.log(`✓ Topic: ${topicId}\n`);
 
         console.log('⚙️  Generating first proof...');
-        const sig1 = await signVoteMessage(wallet, topicId);
-        const sigFields1 = signatureToFieldElements(sig1);
+        const {
+            input: input1,
+            sigFields: sigFields1,
+            messageHash: msgHash1,
+        } = await buildCircuitInput(wallet, voterIndex, topicId, treeData);
 
-        const merkleProof = getMerkleProof(treeData.tree, voterIndex);
-
-        const input1 = {
-            merkleRoot: treeData.root,
-            topicId: BigInt(ethers.id(topicId)).toString(),
-            messageHash: BigInt(sig1.messageHash).toString(),
-            voterAddress: addressToFieldElement(voter.address),
-            pathElements: merkleProof.siblings,
-            pathIndices: merkleProof.pathIndices,
-            sigR: sigFields1.r,
-            sigS: sigFields1.s,
-            sigV: sigFields1.v,
-        };
-
-        const { proof: proof1, publicSignals: ps1 } = await snarkjs.groth16.fullProve(
+        const { publicSignals: ps1, isValid: isValid1 } = await generateAndVerifyProof(
             input1,
-            path.join(process.cwd(), FILE_PATHS.build.wasm),
-            path.join(process.cwd(), FILE_PATHS.build.zkey)
+            vkey
         );
-
-        if (!proof1 || typeof proof1 !== 'object') {
-            throw new Error('Invalid proof generated: proof is missing or not an object');
-        }
-        if (!ps1 || !Array.isArray(ps1)) {
-            throw new Error('Invalid proof generated: publicSignals is missing or not an array');
-        }
-
-        console.log('✓ First proof generated');
-
-        const vkey = readAndValidateJsonFile(
-            path.join(process.cwd(), FILE_PATHS.build.verificationKey),
-            {
-                requiredFields: ['vk_alpha_1', 'vk_beta_2', 'vk_gamma_2', 'vk_delta_2', 'IC'],
-            }
-        );
-
-        const isValid1 = await snarkjs.groth16.verify(vkey, ps1, proof1);
 
         if (!isValid1) {
             throw new Error('First proof verification failed!');
@@ -81,26 +43,28 @@ async function testValidVoter() {
 
         console.log('✓ First proof verified successfully\n');
 
-        // Test nullifier determinism
         console.log('⚙️  Testing nullifier determinism...');
         console.log('   Generating second proof with same parameters...');
 
-        const sig2 = await signVoteMessage(wallet, topicId);
-        const sigFields2 = signatureToFieldElements(sig2);
+        const { sigFields: sigFields2, messageHash: msgHash2 } = await buildCircuitInput(
+            wallet,
+            voterIndex,
+            topicId,
+            treeData
+        );
 
-        // Compute nullifiers
         const nullifier1 = await computeNullifier(
             sigFields1.r,
             sigFields1.s,
             ethers.id(topicId),
-            sig1.messageHash
+            msgHash1
         );
 
         const nullifier2 = await computeNullifier(
             sigFields2.r,
             sigFields2.s,
             ethers.id(topicId),
-            sig2.messageHash
+            msgHash2
         );
 
         console.log(`   Nullifier 1: ${nullifier1}`);
@@ -112,7 +76,6 @@ async function testValidVoter() {
 
         console.log('✓ Nullifiers are deterministic (identical)\n');
 
-        // Test Merkle root validation
         console.log('⚙️  Validating Merkle root in proof...');
         console.log(`   Expected root: ${treeData.root}`);
         console.log(`   Proof root:    ${ps1[PUBLIC_SIGNAL.MERKLE_ROOT]}`);

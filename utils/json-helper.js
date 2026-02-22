@@ -7,11 +7,28 @@ export function readAndValidateJsonFile(filePath, schema) {
     if (!filePath || typeof filePath !== 'string') {
         throw new TypeError('File path must be a non-empty string');
     }
-    if (!fs.existsSync(filePath)) {
+
+    const resolvedPath = path.resolve(filePath);
+    const cwd = process.cwd();
+    if (!resolvedPath.startsWith(cwd)) {
+        throw new Error('Path traversal detected: file path must be within project directory');
+    }
+
+    let realPath;
+    try {
+        realPath = fs.realpathSync(resolvedPath);
+    } catch (error) {
+        throw new Error(`Cannot resolve real path: ${error.message}`);
+    }
+    if (!realPath.startsWith(cwd)) {
+        throw new Error('Path traversal detected via symlink');
+    }
+
+    if (!fs.existsSync(realPath)) {
         throw new Error(`File not found: ${filePath}`);
     }
 
-    const stats = fs.statSync(filePath);
+    const stats = fs.statSync(realPath);
     if (stats.size > MAX_JSON_FILE_SIZE_BYTES) {
         throw new Error(
             `JSON file exceeds maximum size of ${MAX_JSON_FILE_SIZE_BYTES / 1024 / 1024}MB`
@@ -23,9 +40,9 @@ export function readAndValidateJsonFile(filePath, schema) {
 
     let data;
     try {
-        data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+        data = JSON.parse(fs.readFileSync(realPath, 'utf8'));
     } catch (error) {
-        throw new Error(`Failed to parse JSON file ${path.basename(filePath)}: ${error.message}`);
+        throw new Error(`Failed to parse JSON file ${path.basename(realPath)}: ${error.message}`);
     }
 
     if (schema) {

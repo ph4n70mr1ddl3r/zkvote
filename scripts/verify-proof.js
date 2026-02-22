@@ -62,12 +62,12 @@ async function verifyProof(proofPath) {
     try {
         const resolvedPath = validatePathSafety(proofPath);
         if (!fs.existsSync(resolvedPath)) {
-            throw new Error(`Proof file not found: ${proofPath}`);
+            throw new Error(`Proof file not found: ${resolvedPath}`);
         }
 
         const stats = fs.statSync(resolvedPath);
         if (!stats.isFile()) {
-            throw new Error(`Proof path is not a file: ${proofPath}`);
+            throw new Error(`Proof path is not a file: ${resolvedPath}`);
         }
 
         if (stats.size > MAX_PROOF_FILE_SIZE_BYTES) {

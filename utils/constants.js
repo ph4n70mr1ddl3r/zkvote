@@ -28,12 +28,12 @@ export const ALLOWED_VOTE_MESSAGE_PATTERN = /^[\x20-\x7E]+$/;
  * EIP-712 domain configuration
  */
 function parseChainId(envValue) {
+    if (envValue === undefined || envValue === null || envValue === '') {
+        return 1;
+    }
     const parsed = parseInt(envValue, 10);
     if (!Number.isFinite(parsed) || parsed <= 0) {
-        if (envValue !== undefined && envValue !== '1') {
-            console.warn(`Warning: Invalid CHAIN_ID "${envValue}", defaulting to 1`);
-        }
-        return 1;
+        throw new Error(`Invalid CHAIN_ID "${envValue}": must be a positive integer`);
     }
     return parsed;
 }

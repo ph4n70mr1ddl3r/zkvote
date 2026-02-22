@@ -121,10 +121,10 @@ async function main() {
         process.exit(1);
     }
 
-    // 1. Compile circuit
+    // 1. Compile circuit with optimization
     await runCommand(
-        `circom ${circuitPath} --r1cs --wasm --sym -o ${buildDir}`,
-        'Compiling circuit'
+        `circom ${circuitPath} --r1cs --wasm --sym -O 1 -o ${buildDir}`,
+        'Compiling circuit with optimization'
     );
 
     const ptauPath = path.join(

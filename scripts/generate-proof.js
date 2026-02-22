@@ -126,6 +126,17 @@ async function generateProof(voterIndex, voteMessage, useInvalid = false) {
         validateEcdsaScalar(sigFields.s, 'Signature s');
         validateSignatureV(sigFields.v);
 
+        if (merkleProof.siblings.length !== TREE_DEPTH) {
+            throw new Error(
+                `Invalid Merkle proof: siblings has ${merkleProof.siblings.length} elements, expected ${TREE_DEPTH}`
+            );
+        }
+        if (merkleProof.pathIndices.length !== TREE_DEPTH) {
+            throw new Error(
+                `Invalid Merkle proof: pathIndices has ${merkleProof.pathIndices.length} elements, expected ${TREE_DEPTH}`
+            );
+        }
+
         const input = {
             merkleRoot: treeData.root,
             topicId: topicIdHash,

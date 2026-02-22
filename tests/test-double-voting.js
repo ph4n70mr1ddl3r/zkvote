@@ -1,11 +1,10 @@
-import path from 'path';
-import { ethers } from 'ethers';
-import * as snarkjs from 'snarkjs';
-import { signVoteMessage, signatureToFieldElements } from '../utils/eip712.js';
-import { getMerkleProof } from '../utils/merkle-helper.js';
-import { addressToFieldElement } from '../utils/poseidon.js';
-import { FILE_PATHS, PUBLIC_SIGNAL, DISPLAY_WIDTH } from '../utils/constants.js';
-import { readAndValidateJsonFile } from '../utils/json-helper.js';
+import { DISPLAY_WIDTH, PUBLIC_SIGNAL } from '../utils/constants.js';
+import {
+    loadTestFixtures,
+    getWallet,
+    buildCircuitInput,
+    generateAndVerifyProof,
+} from './helpers.js';
 
 async function testDoubleVoting() {
     console.log('\n' + '='.repeat(DISPLAY_WIDTH.STANDARD));
@@ -13,28 +12,12 @@ async function testDoubleVoting() {
     console.log('='.repeat(DISPLAY_WIDTH.STANDARD) + '\n');
 
     try {
-        const votersPath = path.join(process.cwd(), FILE_PATHS.data.validVoters);
-        const voters = readAndValidateJsonFile(votersPath, {
-            isArray: true,
-        });
-
-        const treePath = path.join(process.cwd(), FILE_PATHS.data.merkleTree);
-        const treeData = readAndValidateJsonFile(treePath, {
-            requiredFields: ['root', 'tree', 'leaves'],
-        });
-
-        const vkey = readAndValidateJsonFile(
-            path.join(process.cwd(), FILE_PATHS.build.verificationKey),
-            {
-                requiredFields: ['vk_alpha_1', 'vk_beta_2', 'vk_gamma_2', 'vk_delta_2', 'IC'],
-            }
-        );
+        const { voters, treeData, vkey } = loadTestFixtures();
 
         const voterIndex = 0;
-        const voter = voters[voterIndex];
-        const wallet = new ethers.Wallet(voter.privateKey);
+        const wallet = getWallet(voters, voterIndex);
 
-        console.log(`Testing with voter: ${voter.address}\n`);
+        console.log(`Testing with voter: ${voters[voterIndex].address}\n`);
 
         const nullifierRegistry = new Set();
 
@@ -44,37 +27,12 @@ async function testDoubleVoting() {
         console.log(`   Topic: ${topicId}`);
         console.log('   Generating proof...\n');
 
-        const sig1 = await signVoteMessage(wallet, topicId);
-        const sigFields1 = signatureToFieldElements(sig1);
+        const { input: input1 } = await buildCircuitInput(wallet, voterIndex, topicId, treeData);
 
-        const merkleProof = getMerkleProof(treeData.tree, voterIndex);
-
-        const input1 = {
-            merkleRoot: treeData.root,
-            topicId: BigInt(ethers.id(topicId)).toString(),
-            messageHash: BigInt(sig1.messageHash).toString(),
-            voterAddress: addressToFieldElement(voter.address),
-            pathElements: merkleProof.siblings,
-            pathIndices: merkleProof.pathIndices,
-            sigR: sigFields1.r,
-            sigS: sigFields1.s,
-            sigV: sigFields1.v,
-        };
-
-        const { proof: proof1, publicSignals: ps1 } = await snarkjs.groth16.fullProve(
+        const { publicSignals: ps1, isValid: isValid1 } = await generateAndVerifyProof(
             input1,
-            path.join(process.cwd(), FILE_PATHS.build.wasm),
-            path.join(process.cwd(), FILE_PATHS.build.zkey)
+            vkey
         );
-
-        if (!proof1 || typeof proof1 !== 'object') {
-            throw new Error('Invalid proof generated: proof is missing or not an object');
-        }
-        if (!ps1 || !Array.isArray(ps1)) {
-            throw new Error('Invalid proof generated: publicSignals is missing or not an array');
-        }
-
-        const isValid1 = await snarkjs.groth16.verify(vkey, ps1, proof1);
 
         if (!isValid1) {
             throw new Error('First proof verification failed!');
@@ -84,7 +42,6 @@ async function testDoubleVoting() {
         console.log(`   ✅ Proof verified`);
         console.log(`   Nullifier: ${nullifier1}`);
 
-        // Check nullifier registry
         if (nullifierRegistry.has(nullifier1)) {
             throw new Error('Double vote detected on first vote (should not happen)');
         }
@@ -92,40 +49,16 @@ async function testDoubleVoting() {
         nullifierRegistry.add(nullifier1);
         console.log(`   ✅ Nullifier registered\n`);
 
-        // Second vote (attempt to vote again on same topic)
         console.log('📋 Second Vote (DOUBLE VOTE ATTEMPT):');
         console.log(`   Topic: ${topicId} (SAME topic)`);
         console.log('   Generating proof...\n');
 
-        const sig2 = await signVoteMessage(wallet, topicId);
-        const sigFields2 = signatureToFieldElements(sig2);
+        const { input: input2 } = await buildCircuitInput(wallet, voterIndex, topicId, treeData);
 
-        const input2 = {
-            merkleRoot: treeData.root,
-            topicId: BigInt(ethers.id(topicId)).toString(),
-            messageHash: BigInt(sig2.messageHash).toString(),
-            voterAddress: addressToFieldElement(voter.address),
-            pathElements: merkleProof.siblings,
-            pathIndices: merkleProof.pathIndices,
-            sigR: sigFields2.r,
-            sigS: sigFields2.s,
-            sigV: sigFields2.v,
-        };
-
-        const { proof: proof2, publicSignals: ps2 } = await snarkjs.groth16.fullProve(
+        const { publicSignals: ps2, isValid: isValid2 } = await generateAndVerifyProof(
             input2,
-            path.join(process.cwd(), FILE_PATHS.build.wasm),
-            path.join(process.cwd(), FILE_PATHS.build.zkey)
+            vkey
         );
-
-        if (!proof2 || typeof proof2 !== 'object') {
-            throw new Error('Invalid proof generated: proof is missing or not an object');
-        }
-        if (!ps2 || !Array.isArray(ps2)) {
-            throw new Error('Invalid proof generated: publicSignals is missing or not an array');
-        }
-
-        const isValid2 = await snarkjs.groth16.verify(vkey, ps2, proof2);
 
         if (!isValid2) {
             throw new Error('Second proof verification failed!');
@@ -135,7 +68,6 @@ async function testDoubleVoting() {
         console.log(`   ✅ Proof verified`);
         console.log(`   Nullifier: ${nullifier2}`);
 
-        // Compare nullifiers
         console.log('\n📊 Nullifier Comparison:');
         console.log(`   First vote nullifier:  ${nullifier1}`);
         console.log(`   Second vote nullifier: ${nullifier2}`);
@@ -145,7 +77,6 @@ async function testDoubleVoting() {
             throw new Error('Nullifiers should be identical for same voter + topic!');
         }
 
-        // Check registry
         console.log('🔍 Checking nullifier registry...');
         if (nullifierRegistry.has(nullifier2)) {
             console.log('   ⚠️  DOUBLE VOTE DETECTED!');
