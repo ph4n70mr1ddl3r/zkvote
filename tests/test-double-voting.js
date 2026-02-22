@@ -39,11 +39,8 @@ async function testDoubleVoting() {
         const nullifierRegistry = new Set();
 
         const topicId = 'important-vote';
-        const voteMessage1 = 'Vote for Option A';
-        const voteMessage2 = 'Vote for Option B';
 
         console.log('📋 First Vote:');
-        console.log(`   Message: "${voteMessage1}"`);
         console.log(`   Topic: ${topicId}`);
         console.log('   Generating proof...\n');
 
@@ -89,7 +86,6 @@ async function testDoubleVoting() {
 
         // Second vote (attempt to vote again on same topic)
         console.log('📋 Second Vote (DOUBLE VOTE ATTEMPT):');
-        console.log(`   Message: "${voteMessage2}" (different message)`);
         console.log(`   Topic: ${topicId} (SAME topic)`);
         console.log('   Generating proof...\n');
 

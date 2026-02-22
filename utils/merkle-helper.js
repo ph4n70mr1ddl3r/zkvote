@@ -24,6 +24,11 @@ export async function buildMerkleTree(addresses) {
         );
     }
 
+    const uniqueAddresses = new Set(addresses);
+    if (uniqueAddresses.size !== addresses.length) {
+        throw new Error('Duplicate addresses detected in voter list');
+    }
+
     try {
         const leaves = addresses.map(addr => addressToFieldElement(addr));
 

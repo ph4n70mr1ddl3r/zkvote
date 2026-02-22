@@ -20,9 +20,9 @@ export const PTAU_MIN_FILE_SIZE = 1000000;
 export const DEFAULT_TOPIC_ID = 'vote-topic-2024';
 
 /**
- * Regular expression for allowed vote message characters (ASCII printable)
+ * Regular expression for allowed vote message characters (ASCII printable, non-empty)
  */
-export const ALLOWED_VOTE_MESSAGE_PATTERN = /^[\x20-\x7E]*$/;
+export const ALLOWED_VOTE_MESSAGE_PATTERN = /^[\x20-\x7E]+$/;
 
 /**
  * EIP-712 domain configuration
@@ -97,11 +97,11 @@ export const DISPLAY_WIDTH = {
 };
 
 /**
- * Maximum tree size based on TREE_DEPTH
+ * Maximum tree size based on TREE_DEPTH (computed dynamically)
  */
-export const MAX_TREE_SIZE = 128;
+export const MAX_TREE_SIZE = 2 ** TREE_DEPTH;
 
 /**
- * Maximum voter index based on TREE_DEPTH
+ * Maximum voter index based on TREE_DEPTH (computed dynamically)
  */
-export const MAX_VOTER_INDEX = 127;
+export const MAX_VOTER_INDEX = MAX_TREE_SIZE - 1;

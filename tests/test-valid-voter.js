@@ -30,9 +30,7 @@ async function testValidVoter() {
         console.log(`✓ Testing with voter ${voterIndex}: ${voter.address}`);
 
         const topicId = 'test-topic';
-        const voteMessage = 'Vote for Proposal A';
 
-        console.log(`✓ Vote message: "${voteMessage}"`);
         console.log(`✓ Topic: ${topicId}\n`);
 
         console.log('⚙️  Generating first proof...');

@@ -7,6 +7,8 @@ import { CIRCUIT_CONFIG, PTAU_MIN_FILE_SIZE } from '../utils/constants.js';
 
 const execAsync = promisify(exec);
 
+const DOWNLOAD_TIMEOUT_MS = 300000;
+
 /**
  * Compile Circom circuits and generate proving/verification keys
  */
@@ -14,40 +16,46 @@ const execAsync = promisify(exec);
 async function downloadFile(url, filepath) {
     return new Promise((resolve, reject) => {
         const file = fs.createWriteStream(filepath);
-        https
-            .get(url, response => {
-                if (response.statusCode !== 200) {
-                    file.close();
-                    fs.unlink(filepath, () => {});
-                    reject(new Error(`Failed to download file: HTTP ${response.statusCode}`));
-                    return;
-                }
-                response.pipe(file);
-                file.on('finish', () => {
-                    file.close();
-                    const stats = fs.statSync(filepath);
-                    if (stats.size < PTAU_MIN_FILE_SIZE) {
-                        fs.unlinkSync(filepath);
-                        reject(new Error('Downloaded file is too small, likely an error response'));
-                    } else {
-                        resolve();
-                    }
-                });
-            })
-            .on('error', err => {
+        const request = https.get(url, response => {
+            if (response.statusCode !== 200) {
                 file.close();
-                fs.unlink(filepath, unlinkErr => {
-                    if (unlinkErr) {
-                        reject(
-                            new Error(
-                                `${err.message} (also failed to cleanup: ${unlinkErr.message})`
-                            )
-                        );
-                    } else {
-                        reject(err);
-                    }
-                });
+                fs.unlink(filepath, () => {});
+                reject(new Error(`Failed to download file: HTTP ${response.statusCode}`));
+                return;
+            }
+            response.pipe(file);
+            file.on('finish', () => {
+                file.close();
+                const stats = fs.statSync(filepath);
+                if (stats.size < PTAU_MIN_FILE_SIZE) {
+                    fs.unlinkSync(filepath);
+                    reject(new Error('Downloaded file is too small, likely an error response'));
+                } else {
+                    resolve();
+                }
             });
+        });
+
+        request.setTimeout(DOWNLOAD_TIMEOUT_MS, () => {
+            request.destroy();
+            file.close();
+            fs.unlink(filepath, () => {
+                reject(new Error(`Download timed out after ${DOWNLOAD_TIMEOUT_MS / 1000} seconds`));
+            });
+        });
+
+        request.on('error', err => {
+            file.close();
+            fs.unlink(filepath, unlinkErr => {
+                if (unlinkErr) {
+                    reject(
+                        new Error(`${err.message} (also failed to cleanup: ${unlinkErr.message})`)
+                    );
+                } else {
+                    reject(err);
+                }
+            });
+        });
     });
 }
 

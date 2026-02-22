@@ -30,9 +30,7 @@ async function testInvalidVoter() {
         console.log('  (This address is NOT in the Merkle tree)\n');
 
         const topicId = 'test-topic';
-        const voteMessage = 'Vote for Proposal B';
 
-        console.log(`✓ Vote message: "${voteMessage}"`);
         console.log(`✓ Topic: ${topicId}\n`);
 
         console.log('⚙️  Attempting to generate proof...');
