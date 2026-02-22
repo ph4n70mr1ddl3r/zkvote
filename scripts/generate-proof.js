@@ -203,7 +203,7 @@ if (args[0] === '--invalid') {
     voteMessage = args.slice(1).join(' ').trim();
 }
 
-if (!Number.isFinite(voterIndex) || isNaN(voterIndex)) {
+if (!Number.isFinite(voterIndex)) {
     console.error('Error: Voter index must be a valid integer number');
     process.exit(1);
 }

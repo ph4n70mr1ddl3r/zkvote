@@ -1,0 +1,9 @@
+* text=auto eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.circom text eol=lf
+*.sol text eol=lf
+*.md text eol=lf
+*.wasm binary
+*.zkey binary
+*.ptau binary

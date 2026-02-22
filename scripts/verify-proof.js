@@ -147,11 +147,6 @@ if (!proofPath || proofPath.length === 0) {
     process.exit(1);
 }
 
-if (!path.isAbsolute(proofPath) && !fs.existsSync(path.resolve(proofPath))) {
-    console.error(`Error: Invalid proof path: ${proofPath}`);
-    process.exit(1);
-}
-
 verifyProof(proofPath)
     .then(isValid => {
         process.exit(isValid ? 0 : 1);
