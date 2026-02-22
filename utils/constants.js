@@ -74,6 +74,11 @@ export const FILE_PATHS = {
 export const MAX_VOTE_MESSAGE_LENGTH = 500;
 
 /**
+ * Maximum length for topic ID in characters
+ */
+export const MAX_TOPIC_ID_LENGTH = 256;
+
+/**
  * Circuit configuration
  */
 export const CIRCUIT_CONFIG = {

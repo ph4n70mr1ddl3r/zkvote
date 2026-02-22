@@ -47,9 +47,6 @@ function validateVoterIndex(index, maxIndex) {
     if (index < 0) {
         throw new Error(`Voter index must be non-negative, got ${index}`);
     }
-    if (maxIndex < 0) {
-        throw new Error(`Invalid max index: ${maxIndex}`);
-    }
     if (index > maxIndex) {
         throw new Error(`Voter index ${index} exceeds available voters (0-${maxIndex})`);
     }

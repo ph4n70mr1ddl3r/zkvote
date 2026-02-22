@@ -10,17 +10,16 @@ let cachedVkey = null;
 function validatePathSafety(proofPath) {
     const resolvedPath = path.resolve(proofPath);
     const cwd = process.cwd();
-    const normalizedPath = path.normalize(resolvedPath);
-
-    if (!normalizedPath.startsWith(cwd) && !path.isAbsolute(proofPath)) {
-        throw new Error('Path traversal detected: proof path must be within project directory');
-    }
 
     const dangerousPatterns = ['../', '..\\', '\0'];
     for (const pattern of dangerousPatterns) {
         if (proofPath.includes(pattern)) {
             throw new Error(`Invalid path: contains forbidden pattern`);
         }
+    }
+
+    if (!resolvedPath.startsWith(cwd)) {
+        throw new Error('Path traversal detected: proof path must be within project directory');
     }
 
     return resolvedPath;

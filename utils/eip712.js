@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { DOMAIN_CONFIG, VOTE_TYPES } from './constants.js';
+import { DOMAIN_CONFIG, VOTE_TYPES, MAX_TOPIC_ID_LENGTH } from './constants.js';
 
 /**
  * EIP-712 utilities for deterministic signature generation
@@ -12,7 +12,6 @@ import { DOMAIN_CONFIG, VOTE_TYPES } from './constants.js';
  * @returns {Object} EIP-712 domain object
  * @throws {Error} If topicId is invalid
  */
-const MAX_TOPIC_ID_LENGTH = 256;
 
 export function createDomain(topicId) {
     if (!topicId || typeof topicId !== 'string') {
