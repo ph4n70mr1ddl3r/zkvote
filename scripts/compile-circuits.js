@@ -19,7 +19,11 @@ async function downloadFile(url, filepath) {
         const request = https.get(url, response => {
             if (response.statusCode !== 200) {
                 file.close();
-                fs.unlink(filepath, () => {});
+                fs.unlink(filepath, unlinkErr => {
+                    if (unlinkErr) {
+                        console.warn(`⚠️  Failed to cleanup partial file: ${unlinkErr.message}`);
+                    }
+                });
                 reject(new Error(`Failed to download file: HTTP ${response.statusCode}`));
                 return;
             }
@@ -39,7 +43,10 @@ async function downloadFile(url, filepath) {
         request.setTimeout(DOWNLOAD_TIMEOUT_MS, () => {
             request.destroy();
             file.close();
-            fs.unlink(filepath, () => {
+            fs.unlink(filepath, unlinkErr => {
+                if (unlinkErr) {
+                    console.warn(`⚠️  Failed to cleanup file after timeout: ${unlinkErr.message}`);
+                }
                 reject(new Error(`Download timed out after ${DOWNLOAD_TIMEOUT_MS / 1000} seconds`));
             });
         });

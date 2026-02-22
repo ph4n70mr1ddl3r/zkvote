@@ -66,6 +66,26 @@ export async function poseidonHashMany(inputs) {
  * @returns {string} Address as a field element string
  * @throws {Error} If address is invalid
  */
+const BN254_FIELD_ORDER = BigInt(
+    '21888242871839275222246405745257275088548364400416034343698204186575808495617'
+);
+
+function validateFieldElement(value, name) {
+    let bigIntValue;
+    try {
+        bigIntValue = BigInt(value);
+    } catch (error) {
+        throw new Error(`${name} is not a valid BigInt: ${value}`);
+    }
+    if (bigIntValue < 0n) {
+        throw new Error(`${name} must be non-negative, got ${bigIntValue}`);
+    }
+    if (bigIntValue >= BN254_FIELD_ORDER) {
+        throw new Error(`${name} exceeds BN254 field order`);
+    }
+    return bigIntValue;
+}
+
 export function addressToFieldElement(address) {
     if (typeof address !== 'string') {
         throw new TypeError(`Address must be a string, received ${typeof address}`);
@@ -77,7 +97,7 @@ export function addressToFieldElement(address) {
         throw new Error(`Address must be a valid 20-byte Ethereum address, received: ${address}`);
     }
     try {
-        const addressBigInt = BigInt(address);
+        const addressBigInt = validateFieldElement(address, 'Address');
         return addressBigInt.toString();
     } catch (error) {
         throw new Error(`Failed to convert address to field element: ${error.message}`);
@@ -105,7 +125,10 @@ export async function computeNullifier(sigR, sigS, topicIdHash) {
     }
 
     try {
-        return poseidonHashMany([BigInt(sigR), BigInt(sigS), BigInt(topicIdHash)]);
+        const rField = validateFieldElement(sigR, 'Signature r');
+        const sField = validateFieldElement(sigS, 'Signature s');
+        const topicField = validateFieldElement(topicIdHash, 'Topic ID hash');
+        return poseidonHashMany([rField, sField, topicField]);
     } catch (error) {
         throw new Error(`Failed to compute nullifier: ${error.message}`);
     }

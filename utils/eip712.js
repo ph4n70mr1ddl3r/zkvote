@@ -12,9 +12,14 @@ import { DOMAIN_CONFIG, VOTE_TYPES } from './constants.js';
  * @returns {Object} EIP-712 domain object
  * @throws {Error} If topicId is invalid
  */
+const MAX_TOPIC_ID_LENGTH = 256;
+
 export function createDomain(topicId) {
     if (!topicId || typeof topicId !== 'string') {
         throw new Error('Topic ID must be a non-empty string');
+    }
+    if (topicId.length > MAX_TOPIC_ID_LENGTH) {
+        throw new Error(`Topic ID exceeds maximum length of ${MAX_TOPIC_ID_LENGTH} characters`);
     }
 
     return {
@@ -39,6 +44,9 @@ export function createVoteMessage(topicId) {
     if (!topicId || typeof topicId !== 'string') {
         throw new Error('Topic ID must be a non-empty string');
     }
+    if (topicId.length > MAX_TOPIC_ID_LENGTH) {
+        throw new Error(`Topic ID exceeds maximum length of ${MAX_TOPIC_ID_LENGTH} characters`);
+    }
 
     return {
         topic: topicId,
@@ -56,6 +64,9 @@ export function createVoteMessage(topicId) {
 export async function signVoteMessage(wallet, topicId) {
     if (!topicId || typeof topicId !== 'string' || topicId.trim().length === 0) {
         throw new Error('Topic ID must be a non-empty string');
+    }
+    if (topicId.length > MAX_TOPIC_ID_LENGTH) {
+        throw new Error(`Topic ID exceeds maximum length of ${MAX_TOPIC_ID_LENGTH} characters`);
     }
     if (!wallet || typeof wallet.signTypedData !== 'function') {
         throw new Error('Invalid wallet instance provided');

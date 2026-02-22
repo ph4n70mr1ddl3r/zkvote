@@ -27,10 +27,18 @@ export const ALLOWED_VOTE_MESSAGE_PATTERN = /^[\x20-\x7E]+$/;
 /**
  * EIP-712 domain configuration
  */
+function parseChainId(envValue) {
+    const parsed = parseInt(envValue, 10);
+    if (!Number.isFinite(parsed) || isNaN(parsed) || parsed <= 0) {
+        return 1;
+    }
+    return parsed;
+}
+
 export const DOMAIN_CONFIG = {
     name: 'ZKVoting',
     version: '1',
-    chainId: parseInt(process.env.CHAIN_ID || '1', 10),
+    chainId: parseChainId(process.env.CHAIN_ID || '1'),
     verifyingContract:
         process.env.VERIFYING_CONTRACT || '0x0000000000000000000000000000000000000000',
 };

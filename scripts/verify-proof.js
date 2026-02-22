@@ -4,10 +4,27 @@ import * as snarkjs from 'snarkjs';
 import { FILE_PATHS, PUBLIC_SIGNAL } from '../utils/constants.js';
 import { readAndValidateJsonFile } from '../utils/json-helper.js';
 
-/**
- * Verify a ZK proof
- * Usage: node scripts/verify-proof.js [proof-file]
- */
+const MAX_PROOF_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+let cachedVkey = null;
+
+function validatePathSafety(proofPath) {
+    const resolvedPath = path.resolve(proofPath);
+    const cwd = process.cwd();
+    const normalizedPath = path.normalize(resolvedPath);
+
+    if (!normalizedPath.startsWith(cwd) && !path.isAbsolute(proofPath)) {
+        throw new Error('Path traversal detected: proof path must be within project directory');
+    }
+
+    const dangerousPatterns = ['../', '..\\', '\0'];
+    for (const pattern of dangerousPatterns) {
+        if (proofPath.includes(pattern)) {
+            throw new Error(`Invalid path: contains forbidden pattern`);
+        }
+    }
+
+    return resolvedPath;
+}
 
 async function verifyProof(proofPath) {
     console.log('🔍 Verifying ZK proof...\n');
@@ -17,7 +34,7 @@ async function verifyProof(proofPath) {
     }
 
     try {
-        const resolvedPath = path.resolve(proofPath);
+        const resolvedPath = validatePathSafety(proofPath);
         if (!fs.existsSync(resolvedPath)) {
             throw new Error(`Proof file not found: ${proofPath}`);
         }
@@ -25,6 +42,15 @@ async function verifyProof(proofPath) {
         const stats = fs.statSync(resolvedPath);
         if (!stats.isFile()) {
             throw new Error(`Proof path is not a file: ${proofPath}`);
+        }
+
+        if (stats.size > MAX_PROOF_FILE_SIZE_BYTES) {
+            throw new Error(
+                `Proof file exceeds maximum size of ${MAX_PROOF_FILE_SIZE_BYTES / 1024 / 1024}MB`
+            );
+        }
+        if (stats.size === 0) {
+            throw new Error('Proof file is empty');
         }
 
         const proofData = readAndValidateJsonFile(resolvedPath, {
@@ -52,14 +78,16 @@ async function verifyProof(proofPath) {
             throw new Error('Verification key not found. Run: npm run compile-circuits');
         }
 
-        const vkey = readAndValidateJsonFile(vkeyPath, {
-            requiredFields: ['vk_alpha_1', 'vk_beta_2', 'vk_gamma_2', 'vk_delta_2', 'IC'],
-        });
+        if (!cachedVkey) {
+            cachedVkey = readAndValidateJsonFile(vkeyPath, {
+                requiredFields: ['vk_alpha_1', 'vk_beta_2', 'vk_gamma_2', 'vk_delta_2', 'IC'],
+            });
+        }
 
         console.log('⚙️  Verifying proof...');
 
         const isValid = await snarkjs.groth16.verify(
-            vkey,
+            cachedVkey,
             proofData.publicSignals,
             proofData.proof
         );

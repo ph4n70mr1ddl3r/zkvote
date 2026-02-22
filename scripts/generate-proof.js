@@ -199,11 +199,16 @@ let useInvalid = false;
 
 if (args[0] === '--invalid') {
     useInvalid = true;
-    voterIndex = parseInt(args[1]);
+    voterIndex = parseInt(args[1], 10);
     voteMessage = args.slice(2).join(' ').trim();
 } else {
-    voterIndex = parseInt(args[0]);
+    voterIndex = parseInt(args[0], 10);
     voteMessage = args.slice(1).join(' ').trim();
+}
+
+if (!Number.isFinite(voterIndex) || isNaN(voterIndex)) {
+    console.error('Error: Voter index must be a valid integer number');
+    process.exit(1);
 }
 
 if (!voteMessage || voteMessage.length === 0) {
