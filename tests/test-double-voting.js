@@ -67,6 +67,13 @@ async function testDoubleVoting() {
             path.join(process.cwd(), FILE_PATHS.build.zkey)
         );
 
+        if (!proof1 || typeof proof1 !== 'object') {
+            throw new Error('Invalid proof generated: proof is missing or not an object');
+        }
+        if (!ps1 || !Array.isArray(ps1)) {
+            throw new Error('Invalid proof generated: publicSignals is missing or not an array');
+        }
+
         const isValid1 = await snarkjs.groth16.verify(vkey, ps1, proof1);
 
         if (!isValid1) {
@@ -110,6 +117,13 @@ async function testDoubleVoting() {
             path.join(process.cwd(), FILE_PATHS.build.wasm),
             path.join(process.cwd(), FILE_PATHS.build.zkey)
         );
+
+        if (!proof2 || typeof proof2 !== 'object') {
+            throw new Error('Invalid proof generated: proof is missing or not an object');
+        }
+        if (!ps2 || !Array.isArray(ps2)) {
+            throw new Error('Invalid proof generated: publicSignals is missing or not an array');
+        }
 
         const isValid2 = await snarkjs.groth16.verify(vkey, ps2, proof2);
 

@@ -1,19 +1,24 @@
 import fs from 'fs';
 import path from 'path';
 
-/**
- * Read and validate a JSON file from the filesystem
- * @param {string} filePath - Path to the JSON file
- * @param {Object} schema - Validation schema with optional fields: requiredFields, isArray, objectType
- * @returns {Object|Array} Parsed and validated JSON data
- * @throws {Error} If file doesn't exist, cannot be parsed, or fails validation
- */
+const MAX_JSON_FILE_SIZE_BYTES = 50 * 1024 * 1024;
+
 export function readAndValidateJsonFile(filePath, schema) {
     if (!filePath || typeof filePath !== 'string') {
         throw new TypeError('File path must be a non-empty string');
     }
     if (!fs.existsSync(filePath)) {
         throw new Error(`File not found: ${filePath}`);
+    }
+
+    const stats = fs.statSync(filePath);
+    if (stats.size > MAX_JSON_FILE_SIZE_BYTES) {
+        throw new Error(
+            `JSON file exceeds maximum size of ${MAX_JSON_FILE_SIZE_BYTES / 1024 / 1024}MB`
+        );
+    }
+    if (stats.size === 0) {
+        throw new Error(`JSON file is empty: ${filePath}`);
     }
 
     let data;
@@ -30,16 +35,13 @@ export function readAndValidateJsonFile(filePath, schema) {
     return data;
 }
 
-/**
- * Validate data against a schema
- * @param {*} data - Data to validate
- * @param {Object} schema - Validation schema
- * @throws {Error} If validation fails
- */
 function validateSchema(data, schema) {
     if (schema.requiredFields) {
         if (!Array.isArray(schema.requiredFields)) {
             throw new Error('Schema requiredFields must be an array');
+        }
+        if (typeof data !== 'object' || data === null) {
+            throw new Error('Cannot validate requiredFields on non-object data');
         }
         for (const field of schema.requiredFields) {
             if (!(field in data)) {
@@ -52,21 +54,11 @@ function validateSchema(data, schema) {
         throw new Error('Expected data to be an array');
     }
 
-    if (schema.objectType && typeof data !== 'object') {
-        throw new Error(`Expected data to be an object, got ${typeof data}`);
-    }
-
     if (schema.nonEmpty && Array.isArray(data) && data.length === 0) {
         throw new Error('Expected data to be non-empty array');
     }
 }
 
-/**
- * Write JSON data to a file
- * @param {string} filePath - Path to the file
- * @param {Object|Array} data - Data to write
- * @throws {Error} If file cannot be written
- */
 export function writeJsonFile(filePath, data) {
     if (!filePath || typeof filePath !== 'string') {
         throw new TypeError('File path must be a non-empty string');

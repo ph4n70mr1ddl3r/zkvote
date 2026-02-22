@@ -9,24 +9,23 @@ include "../node_modules/circomlib/circuits/poseidon.circom";
  * Note: This circuit does not have a 'component main' definition because it is
  * designed to be used as a sub-component within the main Vote circuit.
  * For standalone nullifier computation, use utils/poseidon.js:computeNullifier
+ *
+ * The nullifier is computed as: Poseidon(sigR, sigS, topicId, messageHash)
  */
 
 template Nullifier() {
-    // Private inputs: signature components
     signal input sigR;
     signal input sigS;
-    
-    // Public input: topic identifier
     signal input topicId;
+    signal input messageHash;
     
-    // Public output: nullifier
     signal output nullifier;
     
-    // Compute nullifier = Poseidon(sigR, sigS, topicId)
-    component hasher = Poseidon(3);
+    component hasher = Poseidon(4);
     hasher.inputs[0] <== sigR;
     hasher.inputs[1] <== sigS;
     hasher.inputs[2] <== topicId;
+    hasher.inputs[3] <== messageHash;
     
     nullifier <== hasher.out;
 }

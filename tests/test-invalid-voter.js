@@ -60,11 +60,23 @@ async function testInvalidVoter() {
         let proof, publicSignals;
 
         try {
-            ({ proof, publicSignals } = await snarkjs.groth16.fullProve(
+            const result = await snarkjs.groth16.fullProve(
                 input,
                 path.join(process.cwd(), FILE_PATHS.build.wasm),
                 path.join(process.cwd(), FILE_PATHS.build.zkey)
-            ));
+            );
+
+            if (!result.proof || typeof result.proof !== 'object') {
+                throw new Error('Invalid proof generated: proof is missing or not an object');
+            }
+            if (!result.publicSignals || !Array.isArray(result.publicSignals)) {
+                throw new Error(
+                    'Invalid proof generated: publicSignals is missing or not an array'
+                );
+            }
+
+            proof = result.proof;
+            publicSignals = result.publicSignals;
 
             console.log('✓ Proof generated (but will not verify)\n');
         } catch (error) {

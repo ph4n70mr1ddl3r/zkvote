@@ -57,6 +57,13 @@ async function testValidVoter() {
             path.join(process.cwd(), FILE_PATHS.build.zkey)
         );
 
+        if (!proof1 || typeof proof1 !== 'object') {
+            throw new Error('Invalid proof generated: proof is missing or not an object');
+        }
+        if (!ps1 || !Array.isArray(ps1)) {
+            throw new Error('Invalid proof generated: publicSignals is missing or not an array');
+        }
+
         console.log('✓ First proof generated');
 
         const vkey = readAndValidateJsonFile(
