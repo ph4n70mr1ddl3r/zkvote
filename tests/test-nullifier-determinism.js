@@ -40,9 +40,19 @@ async function testNullifierDeterminism() {
 
         const topicHash1 = ethers.id(topic1);
 
-        const nullifier1a = await computeNullifier(fields1a.r, fields1a.s, topicHash1);
+        const nullifier1a = await computeNullifier(
+            fields1a.r,
+            fields1a.s,
+            topicHash1,
+            sig1a.messageHash
+        );
 
-        const nullifier1b = await computeNullifier(fields1b.r, fields1b.s, topicHash1);
+        const nullifier1b = await computeNullifier(
+            fields1b.r,
+            fields1b.s,
+            topicHash1,
+            sig1b.messageHash
+        );
 
         console.log(`  Nullifier 1a: ${nullifier1a}`);
         console.log(`  Nullifier 1b: ${nullifier1b}`);
@@ -66,7 +76,12 @@ async function testNullifierDeterminism() {
 
         const topicHash2 = ethers.id(topic2);
 
-        const nullifier2 = await computeNullifier(fields2.r, fields2.s, topicHash2);
+        const nullifier2 = await computeNullifier(
+            fields2.r,
+            fields2.s,
+            topicHash2,
+            sig2.messageHash
+        );
 
         console.log(`  Nullifier (topic A): ${nullifier1a}`);
         console.log(`  Nullifier (topic B): ${nullifier2}`);
@@ -86,7 +101,12 @@ async function testNullifierDeterminism() {
         const sig3 = await signVoteMessage(wallet2, topic1);
         const fields3 = signatureToFieldElements(sig3);
 
-        const nullifier3 = await computeNullifier(fields3.r, fields3.s, topicHash1);
+        const nullifier3 = await computeNullifier(
+            fields3.r,
+            fields3.s,
+            topicHash1,
+            sig3.messageHash
+        );
 
         console.log(`  Nullifier (voter 1): ${nullifier1a}`);
         console.log(`  Nullifier (voter 2): ${nullifier3}`);

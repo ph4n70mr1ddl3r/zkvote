@@ -6,6 +6,7 @@ import { readAndValidateJsonFile } from '../utils/json-helper.js';
 
 const MAX_PROOF_FILE_SIZE_BYTES = 10 * 1024 * 1024;
 let cachedVkey = null;
+let cachedVkeyMtime = null;
 
 function validatePathSafety(proofPath) {
     if (typeof proofPath !== 'string' || proofPath.length === 0) {
@@ -38,7 +39,17 @@ function validatePathSafety(proofPath) {
         throw new Error('Path traversal detected: proof path must be within project directory');
     }
 
-    return resolvedPath;
+    let realPath;
+    try {
+        realPath = fs.realpathSync(resolvedPath);
+    } catch (error) {
+        throw new Error(`Cannot resolve real path: ${error.message}`);
+    }
+    if (!realPath.startsWith(cwd)) {
+        throw new Error('Path traversal detected via symlink');
+    }
+
+    return realPath;
 }
 
 async function verifyProof(proofPath) {
@@ -93,10 +104,13 @@ async function verifyProof(proofPath) {
             throw new Error('Verification key not found. Run: npm run compile-circuits');
         }
 
-        if (!cachedVkey) {
+        const currentMtime = fs.statSync(vkeyPath).mtime.getTime();
+
+        if (!cachedVkey || cachedVkeyMtime !== currentMtime) {
             cachedVkey = readAndValidateJsonFile(vkeyPath, {
                 requiredFields: ['vk_alpha_1', 'vk_beta_2', 'vk_gamma_2', 'vk_delta_2', 'IC'],
             });
+            cachedVkeyMtime = currentMtime;
         }
 
         console.log('⚙️  Verifying proof...');

@@ -91,6 +91,8 @@ export const CIRCUIT_CONFIG = {
     PTAU_SIZE: 15,
 };
 
+export const DOWNLOAD_TIMEOUT_MS = 300000;
+
 /**
  * Number of accounts to generate for testing
  */

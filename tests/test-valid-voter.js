@@ -48,6 +48,7 @@ async function testValidVoter() {
             pathIndices: merkleProof.pathIndices,
             sigR: sigFields1.r,
             sigS: sigFields1.s,
+            sigV: sigFields1.v,
         };
 
         const { proof: proof1, publicSignals: ps1 } = await snarkjs.groth16.fullProve(
@@ -81,9 +82,19 @@ async function testValidVoter() {
         const sigFields2 = signatureToFieldElements(sig2);
 
         // Compute nullifiers
-        const nullifier1 = await computeNullifier(sigFields1.r, sigFields1.s, ethers.id(topicId));
+        const nullifier1 = await computeNullifier(
+            sigFields1.r,
+            sigFields1.s,
+            ethers.id(topicId),
+            sig1.messageHash
+        );
 
-        const nullifier2 = await computeNullifier(sigFields2.r, sigFields2.s, ethers.id(topicId));
+        const nullifier2 = await computeNullifier(
+            sigFields2.r,
+            sigFields2.s,
+            ethers.id(topicId),
+            sig2.messageHash
+        );
 
         console.log(`   Nullifier 1: ${nullifier1}`);
         console.log(`   Nullifier 2: ${nullifier2}`);

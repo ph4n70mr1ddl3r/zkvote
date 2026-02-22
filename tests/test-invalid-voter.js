@@ -51,6 +51,7 @@ async function testInvalidVoter() {
             pathIndices: fakeMerkleProof.pathIndices,
             sigR: sigFields.r,
             sigS: sigFields.s,
+            sigV: sigFields.v,
         };
 
         console.log('⚠️  Note: Using fake Merkle proof (voter not in tree)');

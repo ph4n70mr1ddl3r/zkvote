@@ -163,6 +163,13 @@ async function generateProof(voterIndex, voteMessage, useInvalid = false) {
 
         const { proof, publicSignals } = await snarkjs.groth16.fullProve(input, wasmPath, zkeyPath);
 
+        if (!proof || typeof proof !== 'object') {
+            throw new Error('Invalid proof generated: proof is missing or not an object');
+        }
+        if (!publicSignals || !Array.isArray(publicSignals)) {
+            throw new Error('Invalid proof generated: publicSignals is missing or not an array');
+        }
+
         console.log('✅ Proof generated successfully!\n');
 
         const nullifier = await computeNullifier(

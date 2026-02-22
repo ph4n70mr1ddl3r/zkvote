@@ -58,6 +58,7 @@ async function testDoubleVoting() {
             pathIndices: merkleProof.pathIndices,
             sigR: sigFields1.r,
             sigS: sigFields1.s,
+            sigV: sigFields1.v,
         };
 
         const { proof: proof1, publicSignals: ps1 } = await snarkjs.groth16.fullProve(
@@ -101,6 +102,7 @@ async function testDoubleVoting() {
             pathIndices: merkleProof.pathIndices,
             sigR: sigFields2.r,
             sigS: sigFields2.s,
+            sigV: sigFields2.v,
         };
 
         const { proof: proof2, publicSignals: ps2 } = await snarkjs.groth16.fullProve(
