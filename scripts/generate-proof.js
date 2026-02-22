@@ -4,7 +4,12 @@ import { ethers } from 'ethers';
 import * as snarkjs from 'snarkjs';
 import { signVoteMessage, signatureToFieldElements } from '../utils/eip712.js';
 import { getMerkleProof } from '../utils/merkle-helper.js';
-import { addressToFieldElement, computeNullifier } from '../utils/poseidon.js';
+import {
+    addressToFieldElement,
+    computeNullifier,
+    validateEcdsaScalar,
+    validateSignatureV,
+} from '../utils/poseidon.js';
 import {
     ALLOWED_VOTE_MESSAGE_PATTERN,
     DEFAULT_TOPIC_ID,
@@ -112,10 +117,25 @@ async function generateProof(voterIndex, voteMessage, useInvalid = false) {
             console.log('🔍 Generated Merkle proof');
         }
 
-        // Prepare circuit inputs
         const voterAddressField = addressToFieldElement(voter.address);
-        const topicIdHash = BigInt(ethers.id(topicId));
-        const messageHashField = BigInt(sig.messageHash).toString();
+
+        let topicIdHash;
+        try {
+            topicIdHash = BigInt(ethers.id(topicId));
+        } catch (error) {
+            throw new Error(`Failed to hash topic ID: ${error.message}`);
+        }
+
+        let messageHashField;
+        try {
+            messageHashField = BigInt(sig.messageHash).toString();
+        } catch (error) {
+            throw new Error(`Failed to convert message hash to field element: ${error.message}`);
+        }
+
+        validateEcdsaScalar(sigFields.r, 'Signature r');
+        validateEcdsaScalar(sigFields.s, 'Signature s');
+        validateSignatureV(sigFields.v);
 
         const input = {
             merkleRoot: treeData.root,
@@ -126,6 +146,7 @@ async function generateProof(voterIndex, voteMessage, useInvalid = false) {
             pathIndices: merkleProof.pathIndices,
             sigR: sigFields.r,
             sigS: sigFields.s,
+            sigV: sigFields.v,
         };
 
         const inputPath = path.join(process.cwd(), FILE_PATHS.build.proofInput);
@@ -144,8 +165,12 @@ async function generateProof(voterIndex, voteMessage, useInvalid = false) {
 
         console.log('✅ Proof generated successfully!\n');
 
-        // Compute nullifier from signature
-        const nullifier = await computeNullifier(sigFields.r, sigFields.s, topicIdHash);
+        const nullifier = await computeNullifier(
+            sigFields.r,
+            sigFields.s,
+            topicIdHash,
+            messageHashField
+        );
 
         console.log('📊 Proof details:');
         console.log(`   Nullifier: ${publicSignals[PUBLIC_SIGNAL.NULLIFIER]}`);

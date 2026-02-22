@@ -81,6 +81,8 @@ export const MAX_VOTE_MESSAGE_LENGTH = 500;
  */
 export const MAX_TOPIC_ID_LENGTH = 256;
 
+export const TOPIC_ID_PATTERN = /^[a-zA-Z0-9_-]+$/;
+
 /**
  * Circuit configuration
  */

@@ -15,9 +15,21 @@ function validatePathSafety(proofPath) {
     const resolvedPath = path.resolve(proofPath);
     const cwd = process.cwd();
 
-    const dangerousPatterns = ['../', '..\\', '\0', '%2e%2e', '%252e'];
+    const dangerousPatterns = [
+        '../',
+        '..\\',
+        '\0',
+        '%2e%2e',
+        '%252e',
+        '%2e%2e%2f',
+        '%2e%2e/',
+        '..%5c',
+        '..%255c',
+        '%252e%252e',
+    ];
+    const lowerPath = proofPath.toLowerCase();
     for (const pattern of dangerousPatterns) {
-        if (proofPath.toLowerCase().includes(pattern.toLowerCase())) {
+        if (lowerPath.includes(pattern.toLowerCase())) {
             throw new Error('Invalid path: contains forbidden pattern');
         }
     }

@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { DOMAIN_CONFIG, VOTE_TYPES, MAX_TOPIC_ID_LENGTH } from './constants.js';
+import { DOMAIN_CONFIG, VOTE_TYPES, MAX_TOPIC_ID_LENGTH, TOPIC_ID_PATTERN } from './constants.js';
 
 /**
  * EIP-712 utilities for deterministic signature generation
@@ -19,6 +19,11 @@ export function createDomain(topicId) {
     }
     if (topicId.length > MAX_TOPIC_ID_LENGTH) {
         throw new Error(`Topic ID exceeds maximum length of ${MAX_TOPIC_ID_LENGTH} characters`);
+    }
+    if (!TOPIC_ID_PATTERN.test(topicId)) {
+        throw new Error(
+            'Topic ID contains invalid characters (only alphanumeric, hyphen, and underscore allowed)'
+        );
     }
 
     return {
@@ -45,6 +50,11 @@ export function createVoteMessage(topicId) {
     }
     if (topicId.length > MAX_TOPIC_ID_LENGTH) {
         throw new Error(`Topic ID exceeds maximum length of ${MAX_TOPIC_ID_LENGTH} characters`);
+    }
+    if (!TOPIC_ID_PATTERN.test(topicId)) {
+        throw new Error(
+            'Topic ID contains invalid characters (only alphanumeric, hyphen, and underscore allowed)'
+        );
     }
 
     return {

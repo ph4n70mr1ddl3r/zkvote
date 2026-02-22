@@ -13,48 +13,30 @@ export function resetPoseidonInstance() {
     poseidonPromise = null;
 }
 
-/**
- * Hash a single value using Poseidon
- * @param {string|number} input - Value to hash
- * @returns {Promise<string>} Hash as a string
- */
 export async function poseidonHash(input) {
     const poseidon = await getPoseidon();
     const hash = poseidon.F.toString(poseidon([input]));
     return hash;
 }
 
-/**
- * Hash two values using Poseidon (used for Merkle tree)
- * @param {string|number} left - Left value to hash
- * @param {string|number} right - Right value to hash
- * @returns {Promise<string>} Hash as a string
- */
 export async function poseidonHash2(left, right) {
     const poseidon = await getPoseidon();
     const hash = poseidon.F.toString(poseidon([left, right]));
     return hash;
 }
 
-/**
- * Hash multiple values using Poseidon
- * @param {Array<string|number>} inputs - Array of values to hash
- * @returns {Promise<string>} Hash as a string
- */
 export async function poseidonHashMany(inputs) {
     const poseidon = await getPoseidon();
     const hash = poseidon.F.toString(poseidon(inputs));
     return hash;
 }
 
-/**
- * Convert Ethereum address to field element
- * @param {string} address - Ethereum address with 0x prefix
- * @returns {string} Address as a field element string
- * @throws {Error} If address is invalid
- */
 const BN254_FIELD_ORDER = BigInt(
     '21888242871839275222246405745257275088548364400416034343698204186575808495617'
+);
+
+const SECP256K1_N = BigInt(
+    '115792089237316195423570985008687907852837564279074904382605163141518161494337'
 );
 
 function validateFieldElement(value, name) {
@@ -71,6 +53,30 @@ function validateFieldElement(value, name) {
         throw new Error(`${name} exceeds BN254 field order`);
     }
     return bigIntValue;
+}
+
+export function validateEcdsaScalar(value, name) {
+    let bigIntValue;
+    try {
+        bigIntValue = BigInt(value);
+    } catch (error) {
+        throw new Error(`${name} is not a valid BigInt: ${value}`);
+    }
+    if (bigIntValue <= 0n) {
+        throw new Error(`${name} must be positive, got ${bigIntValue}`);
+    }
+    if (bigIntValue >= SECP256K1_N) {
+        throw new Error(`${name} must be less than secp256k1 curve order`);
+    }
+    return bigIntValue;
+}
+
+export function validateSignatureV(v) {
+    const vNum = Number(v);
+    if (vNum !== 27 && vNum !== 28) {
+        throw new Error(`Invalid signature v value: must be 27 or 28, got ${v}`);
+    }
+    return vNum;
 }
 
 export function addressToFieldElement(address) {
@@ -91,16 +97,7 @@ export function addressToFieldElement(address) {
     }
 }
 
-/**
- * Compute nullifier from signature and topic ID
- * This is used to prevent double voting
- * @param {string|number} sigR - Signature r component
- * @param {string|number} sigS - Signature s component
- * @param {string|number} topicIdHash - Hashed topic ID
- * @returns {Promise<string>} Nullifier hash
- * @throws {Error} If required parameters are missing or invalid
- */
-export async function computeNullifier(sigR, sigS, topicIdHash) {
+export async function computeNullifier(sigR, sigS, topicIdHash, messageHash) {
     if (sigR === undefined || sigR === null || sigR === '') {
         throw new Error('Signature component r is required');
     }
@@ -110,13 +107,19 @@ export async function computeNullifier(sigR, sigS, topicIdHash) {
     if (topicIdHash === undefined || topicIdHash === null || topicIdHash === '') {
         throw new Error('Topic ID hash is required');
     }
+    if (messageHash === undefined || messageHash === null || messageHash === '') {
+        throw new Error('Message hash is required');
+    }
 
     try {
-        const rField = validateFieldElement(sigR, 'Signature r');
-        const sField = validateFieldElement(sigS, 'Signature s');
+        const rField = validateEcdsaScalar(sigR, 'Signature r');
+        const sField = validateEcdsaScalar(sigS, 'Signature s');
         const topicField = validateFieldElement(topicIdHash, 'Topic ID hash');
-        return poseidonHashMany([rField, sField, topicField]);
+        const messageField = validateFieldElement(messageHash, 'Message hash');
+        return poseidonHashMany([rField, sField, topicField, messageField]);
     } catch (error) {
         throw new Error(`Failed to compute nullifier: ${error.message}`);
     }
 }
+
+export { SECP256K1_N };
