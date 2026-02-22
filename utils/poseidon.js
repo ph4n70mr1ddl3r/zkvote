@@ -1,23 +1,16 @@
 import { buildPoseidon } from 'circomlibjs';
 
-let poseidonInstance = null;
+let poseidonPromise = null;
 
-/**
- * Get or create a singleton Poseidon hash instance
- * @returns {Promise<Object>} Poseidon instance
- */
 export async function getPoseidon() {
-    if (!poseidonInstance) {
-        poseidonInstance = buildPoseidon();
+    if (!poseidonPromise) {
+        poseidonPromise = buildPoseidon();
     }
-    return poseidonInstance;
+    return poseidonPromise;
 }
 
-/**
- * Reset the singleton Poseidon instance (useful for testing)
- */
 export function resetPoseidonInstance() {
-    poseidonInstance = null;
+    poseidonPromise = null;
 }
 
 /**

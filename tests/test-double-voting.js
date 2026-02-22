@@ -149,7 +149,6 @@ async function testDoubleVoting() {
         return true;
     } catch (error) {
         console.error('\n❌ Test failed:', error.message);
-        console.error(error.stack);
         return false;
     }
 }
