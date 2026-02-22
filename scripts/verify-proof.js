@@ -8,13 +8,17 @@ const MAX_PROOF_FILE_SIZE_BYTES = 10 * 1024 * 1024;
 let cachedVkey = null;
 
 function validatePathSafety(proofPath) {
+    if (typeof proofPath !== 'string' || proofPath.length === 0) {
+        throw new Error('Invalid path: must be a non-empty string');
+    }
+
     const resolvedPath = path.resolve(proofPath);
     const cwd = process.cwd();
 
-    const dangerousPatterns = ['../', '..\\', '\0'];
+    const dangerousPatterns = ['../', '..\\', '\0', '%2e%2e', '%252e'];
     for (const pattern of dangerousPatterns) {
-        if (proofPath.includes(pattern)) {
-            throw new Error(`Invalid path: contains forbidden pattern`);
+        if (proofPath.toLowerCase().includes(pattern.toLowerCase())) {
+            throw new Error('Invalid path: contains forbidden pattern');
         }
     }
 

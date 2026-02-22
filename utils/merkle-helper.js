@@ -110,7 +110,11 @@ export function getMerkleProof(tree, leafIndex) {
 
 /**
  * Verify a Merkle proof
- * @deprecated Currently unused but available for future verification needs
+ * Recomputes the Merkle root from leaf and proof path, compares to expected root
+ * @param {string} leaf - Leaf value to verify
+ * @param {Object} proof - Merkle proof with siblings and pathIndices arrays
+ * @param {string} root - Expected Merkle root
+ * @returns {Promise<boolean>} True if proof is valid
  */
 export async function verifyMerkleProof(leaf, proof, root) {
     let current = leaf;

@@ -30,6 +30,9 @@ export const ALLOWED_VOTE_MESSAGE_PATTERN = /^[\x20-\x7E]+$/;
 function parseChainId(envValue) {
     const parsed = parseInt(envValue, 10);
     if (!Number.isFinite(parsed) || parsed <= 0) {
+        if (envValue !== undefined && envValue !== '1') {
+            console.warn(`Warning: Invalid CHAIN_ID "${envValue}", defaulting to 1`);
+        }
         return 1;
     }
     return parsed;
