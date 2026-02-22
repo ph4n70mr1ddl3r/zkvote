@@ -21,10 +21,6 @@ async function main() {
             nonEmpty: true,
         });
 
-        if (validVoters.length === 0) {
-            throw new Error('No valid voters found. Please run: npm run generate-accounts');
-        }
-
         console.log(`📋 Loaded ${validVoters.length} valid voter addresses`);
 
         const addresses = validVoters.map(v => v.address);

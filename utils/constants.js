@@ -125,3 +125,17 @@ export const MAX_TREE_SIZE = 2 ** TREE_DEPTH;
  * Maximum voter index based on TREE_DEPTH (computed dynamically)
  */
 export const MAX_VOTER_INDEX = MAX_TREE_SIZE - 1;
+
+/**
+ * BN254 field order (prime for the alt_bn128 curve)
+ */
+export const BN254_FIELD_ORDER = BigInt(
+    '21888242871839275222246405745257275088548364400416034343698204186575808495617'
+);
+
+/**
+ * secp256k1 curve order (N parameter)
+ */
+export const SECP256K1_N = BigInt(
+    '115792089237316195423570985008687907852837564279074904382605163141518161494337'
+);

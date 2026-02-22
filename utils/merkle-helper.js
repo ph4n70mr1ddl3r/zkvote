@@ -31,7 +31,7 @@ export async function buildMerkleTree(addresses) {
     }
 
     try {
-        const leaves = addresses.map(addr => addressToFieldElement(addr));
+        const leaves = normalizedAddresses.map(addr => addressToFieldElement(addr));
 
         const paddedLeaves = [...leaves];
         const targetSize = 2 ** TREE_DEPTH;

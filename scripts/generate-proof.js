@@ -119,19 +119,8 @@ async function generateProof(voterIndex, voteMessage, useInvalid = false) {
 
         const voterAddressField = addressToFieldElement(voter.address);
 
-        let topicIdHash;
-        try {
-            topicIdHash = BigInt(ethers.id(topicId));
-        } catch (error) {
-            throw new Error(`Failed to hash topic ID: ${error.message}`);
-        }
-
-        let messageHashField;
-        try {
-            messageHashField = BigInt(sig.messageHash).toString();
-        } catch (error) {
-            throw new Error(`Failed to convert message hash to field element: ${error.message}`);
-        }
+        const topicIdHash = BigInt(ethers.id(topicId));
+        const messageHashField = BigInt(sig.messageHash).toString();
 
         validateEcdsaScalar(sigFields.r, 'Signature r');
         validateEcdsaScalar(sigFields.s, 'Signature s');
@@ -235,8 +224,8 @@ if (args[0] === '--invalid') {
     voteMessage = args.slice(1).join(' ').trim();
 }
 
-if (!Number.isFinite(voterIndex)) {
-    console.error('Error: Voter index must be a valid integer number');
+if (!Number.isInteger(voterIndex) || voterIndex < 0) {
+    console.error('Error: Voter index must be a valid non-negative integer');
     process.exit(1);
 }
 

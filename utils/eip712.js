@@ -6,15 +6,8 @@ import { DOMAIN_CONFIG, VOTE_TYPES, MAX_TOPIC_ID_LENGTH, TOPIC_ID_PATTERN } from
  * This allows hardware wallets to sign without exposing private keys
  */
 
-/**
- * Create EIP-712 domain for the voting system
- * @param {string} topicId - Unique identifier for the voting topic
- * @returns {Object} EIP-712 domain object
- * @throws {Error} If topicId is invalid
- */
-
-export function createDomain(topicId) {
-    if (!topicId || typeof topicId !== 'string') {
+function validateTopicId(topicId) {
+    if (!topicId || typeof topicId !== 'string' || topicId.trim().length === 0) {
         throw new Error('Topic ID must be a non-empty string');
     }
     if (topicId.length > MAX_TOPIC_ID_LENGTH) {
@@ -25,7 +18,17 @@ export function createDomain(topicId) {
             'Topic ID contains invalid characters (only alphanumeric, hyphen, and underscore allowed)'
         );
     }
+}
 
+/**
+ * Create EIP-712 domain for the voting system
+ * @param {string} topicId - Unique identifier for the voting topic
+ * @returns {Object} EIP-712 domain object
+ * @throws {Error} If topicId is invalid
+ */
+
+export function createDomain(topicId) {
+    validateTopicId(topicId);
     return {
         ...DOMAIN_CONFIG,
         salt: ethers.id(topicId),
@@ -45,18 +48,7 @@ export const voteTypes = VOTE_TYPES;
  * @throws {Error} If topicId is invalid
  */
 export function createVoteMessage(topicId) {
-    if (!topicId || typeof topicId !== 'string') {
-        throw new Error('Topic ID must be a non-empty string');
-    }
-    if (topicId.length > MAX_TOPIC_ID_LENGTH) {
-        throw new Error(`Topic ID exceeds maximum length of ${MAX_TOPIC_ID_LENGTH} characters`);
-    }
-    if (!TOPIC_ID_PATTERN.test(topicId)) {
-        throw new Error(
-            'Topic ID contains invalid characters (only alphanumeric, hyphen, and underscore allowed)'
-        );
-    }
-
+    validateTopicId(topicId);
     return {
         topic: topicId,
     };
@@ -71,12 +63,7 @@ export function createVoteMessage(topicId) {
  * @throws {Error} If topicId is invalid
  */
 export async function signVoteMessage(wallet, topicId) {
-    if (!topicId || typeof topicId !== 'string' || topicId.trim().length === 0) {
-        throw new Error('Topic ID must be a non-empty string');
-    }
-    if (topicId.length > MAX_TOPIC_ID_LENGTH) {
-        throw new Error(`Topic ID exceeds maximum length of ${MAX_TOPIC_ID_LENGTH} characters`);
-    }
+    validateTopicId(topicId);
     if (!wallet || typeof wallet.signTypedData !== 'function') {
         throw new Error('Invalid wallet instance provided');
     }
@@ -133,9 +120,7 @@ export function signatureToFieldElements(sig) {
  * @throws {Error} If parameters are invalid or signature is malformed
  */
 export function recoverSigner(topicId, signature) {
-    if (!topicId || typeof topicId !== 'string') {
-        throw new Error('Topic ID must be a non-empty string');
-    }
+    validateTopicId(topicId);
     if (!signature || typeof signature !== 'string') {
         throw new Error('Signature must be a non-empty string');
     }

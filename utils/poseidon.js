@@ -1,4 +1,5 @@
 import { buildPoseidon } from 'circomlibjs';
+import { BN254_FIELD_ORDER, SECP256K1_N } from './constants.js';
 
 let poseidonPromise = null;
 
@@ -31,14 +32,6 @@ export async function poseidonHashMany(inputs) {
     return hash;
 }
 
-const BN254_FIELD_ORDER = BigInt(
-    '21888242871839275222246405745257275088548364400416034343698204186575808495617'
-);
-
-const SECP256K1_N = BigInt(
-    '115792089237316195423570985008687907852837564279074904382605163141518161494337'
-);
-
 function validateFieldElement(value, name) {
     let bigIntValue;
     try {
@@ -53,6 +46,19 @@ function validateFieldElement(value, name) {
         throw new Error(`${name} exceeds BN254 field order`);
     }
     return bigIntValue;
+}
+
+function reduceToFieldElement(value, name) {
+    let bigIntValue;
+    try {
+        bigIntValue = BigInt(value);
+    } catch (error) {
+        throw new Error(`${name} is not a valid BigInt: ${value}`);
+    }
+    if (bigIntValue < 0n) {
+        throw new Error(`${name} must be non-negative, got ${bigIntValue}`);
+    }
+    return bigIntValue % BN254_FIELD_ORDER;
 }
 
 export function validateEcdsaScalar(value, name) {
@@ -114,12 +120,10 @@ export async function computeNullifier(sigR, sigS, topicIdHash, messageHash) {
     try {
         const rField = validateEcdsaScalar(sigR, 'Signature r');
         const sField = validateEcdsaScalar(sigS, 'Signature s');
-        const topicField = validateFieldElement(topicIdHash, 'Topic ID hash');
-        const messageField = validateFieldElement(messageHash, 'Message hash');
+        const topicField = reduceToFieldElement(topicIdHash, 'Topic ID hash');
+        const messageField = reduceToFieldElement(messageHash, 'Message hash');
         return poseidonHashMany([rField, sField, topicField, messageField]);
     } catch (error) {
         throw new Error(`Failed to compute nullifier: ${error.message}`);
     }
 }
-
-export { SECP256K1_N };
