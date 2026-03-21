@@ -4,12 +4,8 @@ import * as snarkjs from 'snarkjs';
 import { signVoteMessage, signatureToFieldElements, validateTopicId } from '../utils/eip712.js';
 import { getMerkleProof } from '../utils/merkle-helper.js';
 import { addressToFieldElement } from '../utils/poseidon.js';
-import {
-    FILE_PATHS,
-    MERKLE_PADDING_VALUE,
-    PROOF_GENERATION_TIMEOUT_MS,
-    TREE_DEPTH,
-} from '../utils/constants.js';
+import { generateProofWithTimeout } from '../utils/proof-helper.js';
+import { FILE_PATHS, MERKLE_PADDING_VALUE, TREE_DEPTH } from '../utils/constants.js';
 import { readAndValidateJsonFile } from '../utils/json-helper.js';
 
 export function loadTestFixtures() {
@@ -153,27 +149,7 @@ export async function generateAndVerifyProof(input, vkey) {
     const wasmPath = path.join(process.cwd(), FILE_PATHS.build.wasm);
     const zkeyPath = path.join(process.cwd(), FILE_PATHS.build.zkey);
 
-    const proofPromise = snarkjs.groth16.fullProve(input, wasmPath, zkeyPath);
-    const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(
-            () =>
-                reject(
-                    new Error(
-                        `Proof generation timed out after ${PROOF_GENERATION_TIMEOUT_MS / 1000}s`
-                    )
-                ),
-            PROOF_GENERATION_TIMEOUT_MS
-        );
-    });
-
-    const { proof, publicSignals } = await Promise.race([proofPromise, timeoutPromise]);
-
-    if (!proof || typeof proof !== 'object') {
-        throw new Error('Invalid proof generated: proof is missing or not an object');
-    }
-    if (!publicSignals || !Array.isArray(publicSignals)) {
-        throw new Error('Invalid proof generated: publicSignals is missing or not an array');
-    }
+    const { proof, publicSignals } = await generateProofWithTimeout(input, wasmPath, zkeyPath);
 
     const isValid = await snarkjs.groth16.verify(vkey, publicSignals, proof);
 

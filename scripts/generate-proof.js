@@ -1,7 +1,6 @@
 import fs from 'fs';
 import path from 'path';
 import { ethers } from 'ethers';
-import * as snarkjs from 'snarkjs';
 import { signVoteMessage, signatureToFieldElements, validateTopicId } from '../utils/eip712.js';
 import { getMerkleProof } from '../utils/merkle-helper.js';
 import {
@@ -10,6 +9,7 @@ import {
     validateEcdsaScalar,
     validateSignatureV,
 } from '../utils/poseidon.js';
+import { generateProofWithTimeout } from '../utils/proof-helper.js';
 import {
     ALLOWED_VOTE_MESSAGE_PATTERN,
     DEFAULT_TOPIC_ID,
@@ -18,7 +18,6 @@ import {
     MERKLE_PADDING_VALUE,
     TREE_DEPTH,
     PUBLIC_SIGNAL,
-    PROOF_GENERATION_TIMEOUT_MS,
 } from '../utils/constants.js';
 import { readAndValidateJsonFile, writeJsonFile } from '../utils/json-helper.js';
 
@@ -178,27 +177,7 @@ async function generateProof(
             throw new Error('Circuit not compiled. Run: npm run compile-circuits');
         }
 
-        const proofPromise = snarkjs.groth16.fullProve(input, wasmPath, zkeyPath);
-        const timeoutPromise = new Promise((_, reject) => {
-            setTimeout(
-                () =>
-                    reject(
-                        new Error(
-                            `Proof generation timed out after ${PROOF_GENERATION_TIMEOUT_MS / 1000}s`
-                        )
-                    ),
-                PROOF_GENERATION_TIMEOUT_MS
-            );
-        });
-
-        const { proof, publicSignals } = await Promise.race([proofPromise, timeoutPromise]);
-
-        if (!proof || typeof proof !== 'object') {
-            throw new Error('Invalid proof generated: proof is missing or not an object');
-        }
-        if (!publicSignals || !Array.isArray(publicSignals)) {
-            throw new Error('Invalid proof generated: publicSignals is missing or not an array');
-        }
+        const { proof, publicSignals } = await generateProofWithTimeout(input, wasmPath, zkeyPath);
 
         console.log('✅ Proof generated successfully!\n');
 

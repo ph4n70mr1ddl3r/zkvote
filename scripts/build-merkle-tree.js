@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
-import { buildMerkleTree } from '../utils/merkle-helper.js';
+import { buildMerkleTree, getMerkleProof, verifyMerkleProof } from '../utils/merkle-helper.js';
+import { addressToFieldElement } from '../utils/poseidon.js';
 import { FILE_PATHS, TREE_DEPTH } from '../utils/constants.js';
 import { readAndValidateJsonFile, writeJsonFile } from '../utils/json-helper.js';
 
@@ -37,6 +38,24 @@ async function main() {
         if (!merkleTree.root || merkleTree.root === '0') {
             throw new Error('Invalid Merkle root generated');
         }
+
+        console.log('🔍 Verifying tree integrity...');
+        const testProof = getMerkleProof(merkleTree.tree, 0);
+        const testLeaf = addressToFieldElement(addresses[0]);
+        const proofValid = await verifyMerkleProof(testLeaf, testProof, merkleTree.root);
+        if (!proofValid) {
+            throw new Error('Merkle tree verification failed: proof for first leaf is invalid');
+        }
+
+        const lastLeafIndex = addresses.length - 1;
+        const lastProof = getMerkleProof(merkleTree.tree, lastLeafIndex);
+        const lastLeaf = addressToFieldElement(addresses[lastLeafIndex]);
+        const lastProofValid = await verifyMerkleProof(lastLeaf, lastProof, merkleTree.root);
+        if (!lastProofValid) {
+            throw new Error('Merkle tree verification failed: proof for last leaf is invalid');
+        }
+        console.log('   ✓ First leaf proof verified');
+        console.log('   ✓ Last leaf proof verified');
 
         const treePath = path.join(process.cwd(), FILE_PATHS.data.merkleTree);
         const treeData = {

@@ -25,6 +25,11 @@ const tests = [
         description: 'Nullifiers are deterministic and unique',
     },
     {
+        name: 'Nullifier Collision Test',
+        file: 'tests/test-nullifier-collision.js',
+        description: 'No collisions across multiple voters and topics',
+    },
+    {
         name: 'Double Voting Prevention Test',
         file: 'tests/test-double-voting.js',
         description: 'Duplicate votes are detected via nullifiers',

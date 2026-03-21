@@ -111,12 +111,12 @@ export const NUM_ACCOUNTS = 100;
 /**
  * Public signal indices in proof
  */
-export const PUBLIC_SIGNAL = {
+export const PUBLIC_SIGNAL = Object.freeze({
     NULLIFIER: 0,
     MERKLE_ROOT: 1,
     TOPIC_ID: 2,
     MESSAGE_HASH: 3,
-};
+});
 
 export const EXPECTED_PUBLIC_SIGNALS_COUNT = 4;
 

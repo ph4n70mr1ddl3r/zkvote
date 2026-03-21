@@ -80,14 +80,22 @@ export function writeJsonFile(filePath, data) {
         throw new TypeError('File path must be a non-empty string');
     }
 
-    const dir = path.dirname(filePath);
+    const resolvedPath = path.resolve(filePath);
+    const cwd = process.cwd();
+    if (!resolvedPath.startsWith(cwd)) {
+        throw new Error('Path traversal detected: file path must be within project directory');
+    }
+
+    const dir = path.dirname(resolvedPath);
     if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
     }
 
     try {
-        fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+        fs.writeFileSync(resolvedPath, JSON.stringify(data, null, 2));
     } catch (error) {
-        throw new Error(`Failed to write JSON file ${path.basename(filePath)}: ${error.message}`);
+        throw new Error(
+            `Failed to write JSON file ${path.basename(resolvedPath)}: ${error.message}`
+        );
     }
 }

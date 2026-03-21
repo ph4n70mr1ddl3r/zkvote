@@ -26,18 +26,22 @@ async function downloadFile(url, filepath) {
                 return;
             }
             response.pipe(file);
-            file.on('finish', () => {
+            file.on('finish', async () => {
                 file.close();
-                const stats = fs.statSync(filepath);
-                if (stats.size < PTAU_MIN_FILE_SIZE) {
-                    try {
-                        fs.unlinkSync(filepath);
-                    } catch {
-                        // ignore cleanup errors
+                try {
+                    const stats = await fs.promises.stat(filepath);
+                    if (stats.size < PTAU_MIN_FILE_SIZE) {
+                        try {
+                            await fs.promises.unlink(filepath);
+                        } catch {
+                            // ignore cleanup errors
+                        }
+                        reject(new Error('Downloaded file is too small, likely an error response'));
+                    } else {
+                        resolve();
                     }
-                    reject(new Error('Downloaded file is too small, likely an error response'));
-                } else {
-                    resolve();
+                } catch (statError) {
+                    reject(new Error(`Failed to verify downloaded file: ${statError.message}`));
                 }
             });
         });

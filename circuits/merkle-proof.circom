@@ -1,6 +1,7 @@
 pragma circom 2.0.0;
 
 include "../node_modules/circomlib/circuits/poseidon.circom";
+include "../node_modules/circomlib/circuits/bitify.circom";
 
 /**
  * Merkle tree membership proof circuit
@@ -21,12 +22,17 @@ template MerkleProof(levels) {
     computedHash[0] <== leaf;
     
     component hashers[levels];
+    component binaryChecks[levels];
     
     // Intermediate signals for selecting left/right based on path index
     signal leftSelector[levels];
     signal rightSelector[levels];
     
     for (var i = 0; i < levels; i++) {
+        // Enforce pathIndices[i] is binary (0 or 1)
+        binaryChecks[i] = Num2Bits(1);
+        binaryChecks[i].in <== pathIndices[i];
+        
         hashers[i] = Poseidon(2);
         
         // Select left and right based on path index
