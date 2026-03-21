@@ -123,7 +123,7 @@ async function main() {
 
     // 1. Compile circuit with optimization
     await runCommand(
-        `circom ${circuitPath} --r1cs --wasm --sym -O 1 -o ${buildDir}`,
+        `circom ${circuitPath} --r1cs --wasm --sym --O1 -o ${buildDir}`,
         'Compiling circuit with optimization'
     );
 
@@ -171,7 +171,7 @@ async function main() {
     try {
         const { stdout } = await execAsync(`snarkjs r1cs info ${buildPath}.r1cs`);
         console.log(stdout);
-    } catch (_error) {
+    } catch {
         console.warn('  Could not retrieve circuit info');
     }
 }

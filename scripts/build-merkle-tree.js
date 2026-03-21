@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { buildMerkleTree } from '../utils/merkle-helper.js';
 import { FILE_PATHS, TREE_DEPTH } from '../utils/constants.js';
-import { readAndValidateJsonFile } from '../utils/json-helper.js';
+import { readAndValidateJsonFile, writeJsonFile } from '../utils/json-helper.js';
 
 async function main() {
     console.log('🌳 Building Merkle tree from valid voters...\n');
@@ -47,7 +47,7 @@ async function main() {
             leaves: merkleTree.leaves,
         };
 
-        fs.writeFileSync(treePath, JSON.stringify(treeData, null, 2));
+        writeJsonFile(treePath, treeData);
 
         console.log('\n✅ Merkle tree built successfully!');
         console.log(`   Tree depth: ${TREE_DEPTH}`);

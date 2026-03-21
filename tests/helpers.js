@@ -98,12 +98,3 @@ export async function generateAndVerifyProof(input, vkey) {
 
     return { proof, publicSignals, isValid };
 }
-
-export function validateProofStructure(proof, publicSignals) {
-    if (!proof || typeof proof !== 'object') {
-        throw new Error('Invalid proof generated: proof is missing or not an object');
-    }
-    if (!publicSignals || !Array.isArray(publicSignals)) {
-        throw new Error('Invalid proof generated: publicSignals is missing or not an array');
-    }
-}

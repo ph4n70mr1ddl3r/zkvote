@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { ethers } from 'ethers';
 import * as snarkjs from 'snarkjs';
-import { signVoteMessage, signatureToFieldElements } from '../utils/eip712.js';
+import { signVoteMessage, signatureToFieldElements, validateTopicId } from '../utils/eip712.js';
 import { getMerkleProof } from '../utils/merkle-helper.js';
 import {
     addressToFieldElement,
@@ -15,13 +15,11 @@ import {
     DEFAULT_TOPIC_ID,
     FILE_PATHS,
     MAX_VOTE_MESSAGE_LENGTH,
-    MAX_TOPIC_ID_LENGTH,
-    TOPIC_ID_PATTERN,
     MERKLE_PADDING_VALUE,
     TREE_DEPTH,
     PUBLIC_SIGNAL,
 } from '../utils/constants.js';
-import { readAndValidateJsonFile } from '../utils/json-helper.js';
+import { readAndValidateJsonFile, writeJsonFile } from '../utils/json-helper.js';
 
 /**
  * Generate a ZK proof for a vote
@@ -43,25 +41,6 @@ function validateVoteMessage(message) {
     if (!ALLOWED_VOTE_MESSAGE_PATTERN.test(message)) {
         throw new Error(
             'Vote message contains invalid characters (ASCII printable characters only)'
-        );
-    }
-}
-
-function validateTopicId(topicId) {
-    if (typeof topicId !== 'string') {
-        throw new TypeError(`Topic ID must be a string, received ${typeof topicId}`);
-    }
-    if (topicId.length === 0) {
-        throw new Error('Topic ID cannot be empty');
-    }
-    if (topicId.length > MAX_TOPIC_ID_LENGTH) {
-        throw new Error(
-            `Topic ID exceeds maximum length of ${MAX_TOPIC_ID_LENGTH} characters (received ${topicId.length})`
-        );
-    }
-    if (!TOPIC_ID_PATTERN.test(topicId)) {
-        throw new Error(
-            'Topic ID contains invalid characters (alphanumeric, underscore, dash only)'
         );
     }
 }
@@ -184,7 +163,7 @@ async function generateProof(
         };
 
         const inputPath = path.join(process.cwd(), FILE_PATHS.build.proofInput);
-        fs.writeFileSync(inputPath, JSON.stringify(input, null, 2));
+        writeJsonFile(inputPath, input);
         console.log(`💾 Circuit input saved to: ${inputPath}\n`);
 
         console.log('⚙️  Generating ZK proof (this may take a moment)...');
@@ -248,7 +227,7 @@ async function generateProof(
         };
 
         const proofPath = path.join(process.cwd(), FILE_PATHS.build.latestProof);
-        fs.writeFileSync(proofPath, JSON.stringify(proofData, null, 2));
+        writeJsonFile(proofPath, proofData);
 
         console.log(`💾 Proof saved to: ${proofPath}`);
 
@@ -262,25 +241,11 @@ async function generateProof(
 // CLI interface
 const args = process.argv.slice(2);
 
-if (args.length < 2) {
-    console.error(
-        'Usage: node generate-proof.js <voter-index> <vote-message> [--invalid] [--topic <id>] [--quiet]'
-    );
-    console.error('Example: node generate-proof.js 0 "Vote for Proposal A"');
-    console.error('Example: node generate-proof.js --invalid 0 "Vote for Proposal B"');
-    console.error(
-        'Example: node generate-proof.js 0 "Vote for Proposal A" --topic custom-topic-2024'
-    );
-    process.exit(1);
-}
-
-let voterIndex;
-let voteMessage;
 let useInvalid = false;
 let topicId = DEFAULT_TOPIC_ID;
 let verbose = true;
 
-const parsedArgs = [];
+const positionalArgs = [];
 for (let i = 0; i < args.length; i++) {
     if (args[i] === '--invalid') {
         useInvalid = true;
@@ -289,20 +254,24 @@ for (let i = 0; i < args.length; i++) {
     } else if (args[i] === '--quiet') {
         verbose = false;
     } else {
-        parsedArgs.push(args[i]);
+        positionalArgs.push(args[i]);
     }
 }
 
-if (parsedArgs.length >= 2) {
-    voterIndex = parseInt(parsedArgs[0], 10);
-    voteMessage = parsedArgs.slice(1).join(' ').trim();
-} else if (parsedArgs.length === 1 && useInvalid) {
-    voterIndex = parseInt(parsedArgs[0], 10);
-    voteMessage = parsedArgs.slice(1).join(' ').trim();
-} else {
-    voterIndex = parseInt(args[0], 10);
-    voteMessage = args.slice(1).join(' ').trim();
+if (positionalArgs.length < 2) {
+    console.error(
+        'Usage: node generate-proof.js <voter-index> <vote-message> [--invalid] [--topic <id>] [--quiet]'
+    );
+    console.error('Example: node generate-proof.js 0 "Vote for Proposal A"');
+    console.error('Example: node generate-proof.js 0 "Vote for Proposal B" --invalid');
+    console.error(
+        'Example: node generate-proof.js 0 "Vote for Proposal A" --topic custom-topic-2024'
+    );
+    process.exit(1);
 }
+
+const voterIndex = parseInt(positionalArgs[0], 10);
+const voteMessage = positionalArgs.slice(1).join(' ').trim();
 
 if (!Number.isInteger(voterIndex) || voterIndex < 0) {
     console.error('Error: Voter index must be a valid non-negative integer');

@@ -20,6 +20,8 @@ function validateTopicId(topicId) {
     }
 }
 
+export { validateTopicId };
+
 /**
  * Create EIP-712 domain for the voting system
  * @param {string} topicId - Unique identifier for the voting topic
