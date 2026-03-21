@@ -309,13 +309,38 @@ npm run test:double-vote   # Double voting prevention
 
 ## Security Considerations
 
+### ⚠️ CRITICAL WARNINGS - READ BEFORE DEPLOYMENT
+
 1. **Trusted Setup**: This demo uses a public powers of tau ceremony. Production systems should use a trusted setup specific to the circuit.
 
-2. **Signature Verification**: The current circuit includes basic signature validation. Full ECDSA verification in ZK is expensive and omitted for this demo.
+2. **Signature Verification**: The current circuit includes basic signature validation (non-zero checks only). Full ECDSA verification in ZK is expensive and omitted for this demo. **In production, signatures should be verified outside the circuit or a full ECDSA circuit should be implemented.**
 
 3. **Nullifier Registry**: The system requires a centralized or decentralized registry to track used nullifiers and prevent double voting.
 
 4. **Merkle Tree Updates**: Adding new voters requires updating the Merkle root. This should be done through a secure governance process.
+
+5. **Private Key Security**: The generated test accounts contain private keys stored in plain text. **NEVER**:
+    - Use these accounts in production
+    - Commit `data/*.json` files to version control
+    - Share private keys with anyone
+
+6. **No Signature-to-Address Binding**: The current circuit does not cryptographically bind the signature to the voter's address. This means the proof shows that someone signed a message, but the circuit doesn't verify that the signer matches the Merkle tree member. For production use, consider:
+    - Adding ECDSA public key recovery in-circuit
+    - Using a different nullifier construction that's tied to the address directly
+    - Implementing a hybrid approach with off-chain signature verification
+
+7. **Front-running Protection**: The current implementation does not include protection against front-running attacks on nullifier registration.
+
+8. **Circuit Constraints**: The Merkle tree depth (7) limits voters to 128. For larger elections, increase `TREE_DEPTH` in `utils/constants.js`.
+
+### Security Audit Recommendation
+
+**This code has not been audited.** Before using in production:
+
+- Conduct a professional security audit
+- Test thoroughly in a staging environment
+- Review all cryptographic assumptions
+- Consider using established ZK libraries and frameworks
 
 ## License
 

@@ -1,9 +1,12 @@
 {
     "name": "zkvote",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Zero-Knowledge Proof Voting System with Ethereum accounts and Merkle trees",
     "main": "index.js",
     "type": "module",
+    "engines": {
+        "node": ">=18.0.0"
+    },
     "scripts": {
         "generate-accounts": "node scripts/generate-accounts.js",
         "build-tree": "node scripts/build-merkle-tree.js",
