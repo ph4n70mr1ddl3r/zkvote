@@ -1,5 +1,5 @@
 import { poseidonHash2, addressToFieldElement } from './poseidon.js';
-import { TREE_DEPTH, MERKLE_PADDING_VALUE } from './constants.js';
+import { TREE_DEPTH, MERKLE_PADDING_VALUE, ETHEREUM_ADDRESS_REGEX } from './constants.js';
 
 /**
  * Merkle tree helper functions for proof generation and verification
@@ -24,7 +24,6 @@ export async function buildMerkleTree(addresses) {
         );
     }
 
-    const ETHEREUM_ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
     const normalizedAddresses = addresses.map(addr => {
         if (typeof addr !== 'string') {
             throw new TypeError(`Address must be a string, received ${typeof addr}`);
@@ -84,6 +83,9 @@ export async function buildMerkleTree(addresses) {
 export function getMerkleProof(tree, leafIndex) {
     if (!Array.isArray(tree) || tree.length === 0) {
         throw new Error('Invalid tree structure: must be a non-empty array');
+    }
+    if (!Array.isArray(tree[0]) || tree[0].length === 0) {
+        throw new Error('Invalid tree structure: first level (leaves) must be a non-empty array');
     }
     if (!Number.isInteger(leafIndex) || leafIndex < 0) {
         throw new Error(`Invalid leaf index: ${leafIndex}`);

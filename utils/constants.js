@@ -83,6 +83,8 @@ export const MAX_TOPIC_ID_LENGTH = 256;
 
 export const TOPIC_ID_PATTERN = /^[a-zA-Z0-9_-]+$/;
 
+export const ETHEREUM_ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
+
 /**
  * Circuit configuration
  */
