@@ -1,7 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-
-const MAX_JSON_FILE_SIZE_BYTES = 50 * 1024 * 1024;
+import { MAX_JSON_FILE_SIZE_BYTES } from './constants.js';
 
 export function readAndValidateJsonFile(filePath, schema) {
     if (!filePath || typeof filePath !== 'string') {

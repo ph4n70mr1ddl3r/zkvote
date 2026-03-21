@@ -13,7 +13,6 @@ template Vote(levels) {
     signal input pathIndices[levels];
     signal input sigR;
     signal input sigS;
-    signal input sigV;
     
     signal output nullifier;
     

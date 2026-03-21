@@ -1,10 +1,13 @@
 import fs from 'fs';
 import path from 'path';
 import * as snarkjs from 'snarkjs';
-import { FILE_PATHS, PUBLIC_SIGNAL, EXPECTED_PUBLIC_SIGNALS_COUNT } from '../utils/constants.js';
+import {
+    FILE_PATHS,
+    PUBLIC_SIGNAL,
+    EXPECTED_PUBLIC_SIGNALS_COUNT,
+    MAX_PROOF_FILE_SIZE_BYTES,
+} from '../utils/constants.js';
 import { readAndValidateJsonFile } from '../utils/json-helper.js';
-
-const MAX_PROOF_FILE_SIZE_BYTES = 10 * 1024 * 1024;
 let cachedVkey = null;
 let cachedVkeyMtime = null;
 

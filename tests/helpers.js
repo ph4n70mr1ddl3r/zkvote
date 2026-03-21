@@ -74,7 +74,6 @@ export async function buildCircuitInput(
             pathIndices: merkleProof.pathIndices,
             sigR: sigFields.r,
             sigS: sigFields.s,
-            sigV: sigFields.v,
         },
         sigFields,
         messageHash: sig.messageHash,

@@ -93,6 +93,12 @@ export const CIRCUIT_CONFIG = {
 
 export const DOWNLOAD_TIMEOUT_MS = 300000;
 
+export const MAX_JSON_FILE_SIZE_BYTES = 50 * 1024 * 1024;
+
+export const MAX_PROOF_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+
+export const PROOF_GENERATION_TIMEOUT_MS = 120000;
+
 /**
  * Number of accounts to generate for testing
  */

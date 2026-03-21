@@ -18,6 +18,7 @@ import {
     MERKLE_PADDING_VALUE,
     TREE_DEPTH,
     PUBLIC_SIGNAL,
+    PROOF_GENERATION_TIMEOUT_MS,
 } from '../utils/constants.js';
 import { readAndValidateJsonFile, writeJsonFile } from '../utils/json-helper.js';
 
@@ -65,8 +66,6 @@ async function generateProof(
     verbose = true
 ) {
     console.log('🔐 Generating ZK proof for vote...\n');
-
-    const PROOF_GENERATION_TIMEOUT_MS = 120000;
 
     try {
         validateVoteMessage(voteMessage);
@@ -159,7 +158,6 @@ async function generateProof(
             pathIndices: merkleProof.pathIndices,
             sigR: sigFields.r,
             sigS: sigFields.s,
-            sigV: sigFields.v,
         };
 
         const inputPath = path.join(process.cwd(), FILE_PATHS.build.proofInput);
