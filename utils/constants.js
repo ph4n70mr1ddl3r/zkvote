@@ -1,3 +1,5 @@
+import 'dotenv/config';
+
 /**
  * Depth of the Merkle tree (supports up to 2^7 = 128 voters)
  */

@@ -1,7 +1,7 @@
 import path from 'path';
 import { ethers } from 'ethers';
 import * as snarkjs from 'snarkjs';
-import { signVoteMessage, signatureToFieldElements } from '../utils/eip712.js';
+import { signVoteMessage, signatureToFieldElements, validateTopicId } from '../utils/eip712.js';
 import { getMerkleProof } from '../utils/merkle-helper.js';
 import { addressToFieldElement } from '../utils/poseidon.js';
 import {
@@ -52,6 +52,57 @@ export function createFakeMerkleProof() {
     };
 }
 
+export function validateCircuitInput(input) {
+    if (!input || typeof input !== 'object') {
+        throw new Error('Circuit input must be a non-null object');
+    }
+
+    const requiredFields = [
+        'merkleRoot',
+        'topicId',
+        'messageHash',
+        'voterAddress',
+        'pathElements',
+        'pathIndices',
+        'sigR',
+        'sigS',
+    ];
+
+    for (const field of requiredFields) {
+        if (!(field in input)) {
+            throw new Error(`Missing required circuit input field: ${field}`);
+        }
+    }
+
+    if (!Array.isArray(input.pathElements) || input.pathElements.length !== TREE_DEPTH) {
+        throw new Error(`pathElements must be an array of length ${TREE_DEPTH}`);
+    }
+
+    if (!Array.isArray(input.pathIndices) || input.pathIndices.length !== TREE_DEPTH) {
+        throw new Error(`pathIndices must be an array of length ${TREE_DEPTH}`);
+    }
+
+    for (let i = 0; i < TREE_DEPTH; i++) {
+        if (typeof input.pathElements[i] !== 'string') {
+            throw new Error(`pathElements[${i}] must be a string`);
+        }
+        if (input.pathIndices[i] !== 0 && input.pathIndices[i] !== 1) {
+            throw new Error(`pathIndices[${i}] must be 0 or 1`);
+        }
+    }
+
+    for (const field of ['merkleRoot', 'topicId', 'messageHash', 'voterAddress', 'sigR', 'sigS']) {
+        if (typeof input[field] !== 'string') {
+            throw new Error(`${field} must be a string`);
+        }
+        try {
+            BigInt(input[field]);
+        } catch {
+            throw new Error(`${field} must be a valid numeric string`);
+        }
+    }
+}
+
 export async function buildCircuitInput(
     wallet,
     voterIndex,
@@ -68,6 +119,8 @@ export async function buildCircuitInput(
     if (!wallet || typeof wallet.address !== 'string') {
         throw new Error('Invalid wallet: must have address property');
     }
+
+    validateTopicId(topicId);
 
     const sig = await signVoteMessage(wallet, topicId);
     const sigFields = signatureToFieldElements(sig);
@@ -95,6 +148,8 @@ export async function buildCircuitInput(
 }
 
 export async function generateAndVerifyProof(input, vkey) {
+    validateCircuitInput(input);
+
     const wasmPath = path.join(process.cwd(), FILE_PATHS.build.wasm);
     const zkeyPath = path.join(process.cwd(), FILE_PATHS.build.zkey);
 

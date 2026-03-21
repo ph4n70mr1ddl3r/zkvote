@@ -9,7 +9,7 @@ import {
 } from '../utils/constants.js';
 import { readAndValidateJsonFile } from '../utils/json-helper.js';
 let cachedVkey = null;
-let cachedVkeyMtime = null;
+let cachedVkeyPath = null;
 
 function validatePathSafety(proofPath) {
     if (typeof proofPath !== 'string' || proofPath.length === 0) {
@@ -101,13 +101,11 @@ async function verifyProof(proofPath) {
             throw new Error('Verification key not found. Run: npm run compile-circuits');
         }
 
-        const currentMtime = fs.statSync(vkeyPath).mtime.getTime();
-
-        if (!cachedVkey || cachedVkeyMtime !== currentMtime) {
+        if (!cachedVkey || cachedVkeyPath !== vkeyPath) {
             cachedVkey = readAndValidateJsonFile(vkeyPath, {
                 requiredFields: ['vk_alpha_1', 'vk_beta_2', 'vk_gamma_2', 'vk_delta_2', 'IC'],
             });
-            cachedVkeyMtime = currentMtime;
+            cachedVkeyPath = vkeyPath;
         }
 
         console.log('⚙️  Verifying proof...');

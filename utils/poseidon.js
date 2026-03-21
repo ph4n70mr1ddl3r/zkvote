@@ -10,6 +10,10 @@ export async function getPoseidon() {
     return poseidonPromise;
 }
 
+/**
+ * Reset the cached Poseidon instance.
+ * Useful for testing scenarios where you need to ensure a fresh instance.
+ */
 export function resetPoseidonInstance() {
     poseidonPromise = null;
 }

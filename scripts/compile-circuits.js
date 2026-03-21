@@ -176,7 +176,11 @@ async function main() {
     }
 }
 
-main().catch(error => {
-    console.error('\n❌ Compilation failed:', error.message);
-    process.exit(1);
-});
+main()
+    .then(() => {
+        process.exit(0);
+    })
+    .catch(error => {
+        console.error('\n❌ Compilation failed:', error.message);
+        process.exit(1);
+    });
