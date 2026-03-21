@@ -123,7 +123,7 @@ async function main() {
 
     // 1. Compile circuit with optimization
     await runCommand(
-        `circom ${circuitPath} --r1cs --wasm --sym --O1 -o ${buildDir}`,
+        `circom ${circuitPath} --r1cs --wasm --sym --O2 -o ${buildDir}`,
         'Compiling circuit with optimization'
     );
 

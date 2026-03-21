@@ -4,7 +4,12 @@ import * as snarkjs from 'snarkjs';
 import { signVoteMessage, signatureToFieldElements } from '../utils/eip712.js';
 import { getMerkleProof } from '../utils/merkle-helper.js';
 import { addressToFieldElement } from '../utils/poseidon.js';
-import { FILE_PATHS, MERKLE_PADDING_VALUE, TREE_DEPTH } from '../utils/constants.js';
+import {
+    FILE_PATHS,
+    MERKLE_PADDING_VALUE,
+    PROOF_GENERATION_TIMEOUT_MS,
+    TREE_DEPTH,
+} from '../utils/constants.js';
 import { readAndValidateJsonFile } from '../utils/json-helper.js';
 
 export function loadTestFixtures() {
@@ -28,6 +33,15 @@ export function loadTestFixtures() {
 }
 
 export function getWallet(voters, index) {
+    if (!Array.isArray(voters) || voters.length === 0) {
+        throw new Error('Voters array must be non-empty');
+    }
+    if (!Number.isInteger(index) || index < 0) {
+        throw new Error(`Voter index must be a non-negative integer, got ${index}`);
+    }
+    if (index >= voters.length) {
+        throw new Error(`Voter index ${index} out of bounds (0-${voters.length - 1})`);
+    }
     return new ethers.Wallet(voters[index].privateKey);
 }
 
@@ -84,7 +98,20 @@ export async function generateAndVerifyProof(input, vkey) {
     const wasmPath = path.join(process.cwd(), FILE_PATHS.build.wasm);
     const zkeyPath = path.join(process.cwd(), FILE_PATHS.build.zkey);
 
-    const { proof, publicSignals } = await snarkjs.groth16.fullProve(input, wasmPath, zkeyPath);
+    const proofPromise = snarkjs.groth16.fullProve(input, wasmPath, zkeyPath);
+    const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(
+            () =>
+                reject(
+                    new Error(
+                        `Proof generation timed out after ${PROOF_GENERATION_TIMEOUT_MS / 1000}s`
+                    )
+                ),
+            PROOF_GENERATION_TIMEOUT_MS
+        );
+    });
+
+    const { proof, publicSignals } = await Promise.race([proofPromise, timeoutPromise]);
 
     if (!proof || typeof proof !== 'object') {
         throw new Error('Invalid proof generated: proof is missing or not an object');
