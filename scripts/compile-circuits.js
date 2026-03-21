@@ -171,8 +171,8 @@ async function main() {
     try {
         const { stdout } = await execAsync(`snarkjs r1cs info ${buildPath}.r1cs`);
         console.log(stdout);
-    } catch {
-        console.warn('  Could not retrieve circuit info');
+    } catch (error) {
+        console.warn('  Could not retrieve circuit info:', error.message || 'unknown error');
     }
 }
 

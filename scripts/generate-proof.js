@@ -87,6 +87,14 @@ async function generateProof(
         validateVoterIndex(voterIndex, voters.length - 1);
 
         const voter = voters[voterIndex];
+        const wallet = new ethers.Wallet(voter.privateKey);
+
+        if (wallet.address.toLowerCase() !== voter.address.toLowerCase()) {
+            throw new Error(
+                `Wallet address mismatch: derived ${wallet.address}, expected ${voter.address}`
+            );
+        }
+
         console.log(`📋 Voter: ${voter.address} (index ${voterIndex})`);
         console.log(`📝 Vote message: "${voteMessage}"\n`);
 
@@ -99,8 +107,6 @@ async function generateProof(
             requiredFields: ['root', 'tree', 'leaves'],
         });
         console.log(`🌳 Merkle root: ${treeData.root}`);
-
-        const wallet = new ethers.Wallet(voter.privateKey);
 
         console.log('✍️  Signing vote message...');
         const sig = await signVoteMessage(wallet, topicId);
