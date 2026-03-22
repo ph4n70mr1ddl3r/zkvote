@@ -8,8 +8,10 @@ import {
     MAX_PROOF_FILE_SIZE_BYTES,
 } from '../utils/constants.js';
 import { readAndValidateJsonFile } from '../utils/json-helper.js';
-let cachedVkey = null;
-let cachedVkeyPath = null;
+const vkeyCache = {
+    data: null,
+    path: null,
+};
 
 function validatePathSafety(proofPath) {
     if (typeof proofPath !== 'string' || proofPath.length === 0) {
@@ -20,8 +22,8 @@ function validatePathSafety(proofPath) {
         throw new Error('Path exceeds maximum length');
     }
 
-    if (!/^[a-zA-Z0-9_\-/.]+$/.test(proofPath)) {
-        throw new Error('Invalid path: contains forbidden characters');
+    if (proofPath.includes('..')) {
+        throw new Error('Path traversal detected: relative path components not allowed');
     }
 
     const resolvedPath = path.resolve(proofPath);
@@ -101,17 +103,17 @@ async function verifyProof(proofPath) {
             throw new Error('Verification key not found. Run: npm run compile-circuits');
         }
 
-        if (!cachedVkey || cachedVkeyPath !== vkeyPath) {
-            cachedVkey = readAndValidateJsonFile(vkeyPath, {
+        if (!vkeyCache.data || vkeyCache.path !== vkeyPath) {
+            vkeyCache.data = readAndValidateJsonFile(vkeyPath, {
                 requiredFields: ['vk_alpha_1', 'vk_beta_2', 'vk_gamma_2', 'vk_delta_2', 'IC'],
             });
-            cachedVkeyPath = vkeyPath;
+            vkeyCache.path = vkeyPath;
         }
 
         console.log('⚙️  Verifying proof...');
 
         const isValid = await snarkjs.groth16.verify(
-            cachedVkey,
+            vkeyCache.data,
             proofData.publicSignals,
             proofData.proof
         );
