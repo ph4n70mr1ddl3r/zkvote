@@ -13,7 +13,8 @@
         "resolveJsonModule": true,
         "noUnusedLocals": true,
         "noUnusedParameters": true,
-        "noFallthroughCasesInSwitch": true
+        "noFallthroughCasesInSwitch": true,
+        "maxNodeModuleJsDepth": 0
     },
     "include": ["scripts/**/*", "utils/**/*", "tests/**/*"],
     "exclude": ["node_modules", "build", "data"]

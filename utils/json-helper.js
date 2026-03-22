@@ -6,10 +6,10 @@ import { MAX_JSON_FILE_SIZE_BYTES } from './constants.js';
  * Read and validate a JSON file with schema checking and path traversal protection.
  * Ensures file is within project directory and doesn't exceed size limits.
  * @param {string} filePath - Path to JSON file (relative to project root or absolute)
- * @param {Object} schema - Validation schema object
- * @param {Array<string>} schema.requiredFields - Fields that must be present in object
- * @param {boolean} schema.isArray - If true, data must be an array
- * @param {boolean} schema.nonEmpty - If true, array must not be empty
+ * @param {Object} [schema] - Validation schema object (optional)
+ * @param {Array<string>} [schema.requiredFields] - Fields that must be present in object
+ * @param {boolean} [schema.isArray] - If true, data must be an array
+ * @param {boolean} [schema.nonEmpty] - If true, array must not be empty
  * @returns {*} Parsed and validated JSON data
  * @throws {TypeError} If filePath is not a string
  * @throws {Error} If path traversal detected, file not found, or validation fails
@@ -28,7 +28,7 @@ export function readAndValidateJsonFile(filePath, schema) {
     let realPath;
     try {
         realPath = fs.realpathSync(resolvedPath);
-    } catch (error) {
+    } catch (/** @type {Error} */ error) {
         throw new Error(`Cannot resolve real path: ${error.message}`);
     }
     if (!realPath.startsWith(cwd)) {
@@ -52,7 +52,7 @@ export function readAndValidateJsonFile(filePath, schema) {
     let data;
     try {
         data = JSON.parse(fs.readFileSync(realPath, 'utf8'));
-    } catch (error) {
+    } catch (/** @type {SyntaxError} */ error) {
         throw new Error(`Failed to parse JSON file ${path.basename(realPath)}: ${error.message}`);
     }
 
@@ -120,7 +120,7 @@ export function writeJsonFile(filePath, data) {
 
     try {
         fs.writeFileSync(resolvedPath, JSON.stringify(data, null, 2));
-    } catch (error) {
+    } catch (/** @type {Error} */ error) {
         throw new Error(
             `Failed to write JSON file ${path.basename(resolvedPath)}: ${error.message}`
         );
