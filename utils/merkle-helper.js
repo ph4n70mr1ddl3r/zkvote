@@ -137,6 +137,23 @@ export function getMerkleProof(tree, leafIndex) {
  * @returns {Promise<boolean>} True if proof is valid (recomputed root matches expected)
  */
 export async function verifyMerkleProof(leaf, proof, root) {
+    if (!proof || typeof proof !== 'object') {
+        throw new Error('Proof must be a non-null object');
+    }
+    if (!Array.isArray(proof.siblings) || !Array.isArray(proof.pathIndices)) {
+        throw new Error('Proof must contain siblings and pathIndices arrays');
+    }
+    if (proof.siblings.length !== TREE_DEPTH) {
+        throw new Error(
+            `Proof siblings length (${proof.siblings.length}) must match TREE_DEPTH (${TREE_DEPTH})`
+        );
+    }
+    if (proof.pathIndices.length !== TREE_DEPTH) {
+        throw new Error(
+            `Proof pathIndices length (${proof.pathIndices.length}) must match TREE_DEPTH (${TREE_DEPTH})`
+        );
+    }
+
     let current = leaf;
 
     for (let i = 0; i < TREE_DEPTH; i++) {

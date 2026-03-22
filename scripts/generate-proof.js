@@ -20,6 +20,9 @@ import {
     PUBLIC_SIGNAL,
 } from '../utils/constants.js';
 import { readAndValidateJsonFile, writeJsonFile } from '../utils/json-helper.js';
+import { getTestWallet, TEST_SEED } from '../utils/test-wallets.js';
+
+const INVALID_SEED = TEST_SEED + '-invalid';
 
 /**
  * Generate a ZK proof for a vote
@@ -86,7 +89,8 @@ async function generateProof(
         validateVoterIndex(voterIndex, voters.length - 1);
 
         const voter = voters[voterIndex];
-        const wallet = new ethers.Wallet(voter.privateKey);
+        const seed = useInvalid ? INVALID_SEED : TEST_SEED;
+        const wallet = getTestWallet(voterIndex, seed);
 
         if (wallet.address.toLowerCase() !== voter.address.toLowerCase()) {
             throw new Error(

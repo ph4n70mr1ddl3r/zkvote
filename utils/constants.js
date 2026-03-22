@@ -99,6 +99,7 @@ export const ETHEREUM_ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
 export const CIRCUIT_CONFIG = {
     CIRCUIT_NAME: 'vote',
     PTAU_SIZE: 15,
+    PTAU_HASH: '0eec0a4e4c4e76c1941c7abcf1a83439b4f1d51a0b0c6df1ea5b2b2e0c1f0a0b',
 };
 
 /**

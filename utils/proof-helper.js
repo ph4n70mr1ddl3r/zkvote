@@ -34,24 +34,29 @@ export async function generateProofWithTimeout(
         throw new TypeError('zkeyPath must be a non-empty string');
     }
 
+    let timeoutId;
     const proofPromise = snarkjs.groth16.fullProve(input, wasmPath, zkeyPath);
     const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(
+        timeoutId = setTimeout(
             () => reject(new Error(`Proof generation timed out after ${timeoutMs / 1000}s`)),
             timeoutMs
         );
     });
 
-    const { proof, publicSignals } = await Promise.race([proofPromise, timeoutPromise]);
+    try {
+        const { proof, publicSignals } = await Promise.race([proofPromise, timeoutPromise]);
 
-    if (!proof || typeof proof !== 'object') {
-        throw new Error('Invalid proof generated: proof is missing or not an object');
-    }
-    if (!publicSignals || !Array.isArray(publicSignals)) {
-        throw new Error('Invalid proof generated: publicSignals is missing or not an array');
-    }
+        if (!proof || typeof proof !== 'object') {
+            throw new Error('Invalid proof generated: proof is missing or not an object');
+        }
+        if (!publicSignals || !Array.isArray(publicSignals)) {
+            throw new Error('Invalid proof generated: publicSignals is missing or not an array');
+        }
 
-    return { proof, publicSignals };
+        return { proof, publicSignals };
+    } finally {
+        clearTimeout(timeoutId);
+    }
 }
 
 /**

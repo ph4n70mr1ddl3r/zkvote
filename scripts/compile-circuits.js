@@ -3,29 +3,28 @@ import { promisify } from 'util';
 import fs from 'fs';
 import path from 'path';
 import https from 'https';
+import crypto from 'crypto';
 import { CIRCUIT_CONFIG, PTAU_MIN_FILE_SIZE, DOWNLOAD_TIMEOUT_MS } from '../utils/constants.js';
 
 const execAsync = promisify(exec);
 
-/**
- * Compile Circom circuits and generate proving/verification keys
- */
-
-async function downloadFile(url, filepath) {
+async function downloadFile(url, filepath, expectedHash) {
     return new Promise((resolve, reject) => {
         const file = fs.createWriteStream(filepath);
+        const hash = crypto.createHash('sha256');
         const request = https.get(url, response => {
             if (response.statusCode !== 200) {
                 file.close();
                 fs.unlink(filepath, unlinkErr => {
                     if (unlinkErr) {
-                        console.warn(`⚠️  Failed to cleanup partial file: ${unlinkErr.message}`);
+                        console.warn(`Failed to cleanup partial file: ${unlinkErr.message}`);
                     }
                 });
                 reject(new Error(`Failed to download file: HTTP ${response.statusCode}`));
                 return;
             }
             response.pipe(file);
+            response.on('data', chunk => hash.update(chunk));
             file.on('finish', async () => {
                 file.close();
                 try {
@@ -38,7 +37,22 @@ async function downloadFile(url, filepath) {
                         }
                         reject(new Error('Downloaded file is too small, likely an error response'));
                     } else {
-                        resolve();
+                        const actualHash = hash.digest('hex');
+                        if (expectedHash && actualHash !== expectedHash) {
+                            try {
+                                await fs.promises.unlink(filepath);
+                            } catch {
+                                // ignore cleanup errors
+                            }
+                            reject(
+                                new Error(
+                                    `PTAU hash mismatch! Expected: ${expectedHash}, Got: ${actualHash}. ` +
+                                        'This could indicate a corrupted download or MITM attack.'
+                                )
+                            );
+                        } else {
+                            resolve();
+                        }
                     }
                 } catch (statError) {
                     reject(new Error(`Failed to verify downloaded file: ${statError.message}`));
@@ -51,7 +65,7 @@ async function downloadFile(url, filepath) {
             file.close();
             fs.unlink(filepath, unlinkErr => {
                 if (unlinkErr) {
-                    console.warn(`⚠️  Failed to cleanup file after timeout: ${unlinkErr.message}`);
+                    console.warn(`Failed to cleanup file after timeout: ${unlinkErr.message}`);
                 }
                 reject(new Error(`Download timed out after ${DOWNLOAD_TIMEOUT_MS / 1000} seconds`));
             });
@@ -96,7 +110,6 @@ async function runCommand(command, description) {
 async function main() {
     console.log('⚙️  Compiling ZKP circuits...\n');
 
-    // Create build directory
     const buildDir = path.join(process.cwd(), 'build');
     if (!fs.existsSync(buildDir)) {
         fs.mkdirSync(buildDir, { recursive: true });
@@ -109,7 +122,6 @@ async function main() {
     );
     const buildPath = path.join(buildDir, CIRCUIT_CONFIG.CIRCUIT_NAME);
 
-    // Check if circom is installed
     try {
         await execAsync('circom --version');
     } catch (error) {
@@ -125,7 +137,6 @@ async function main() {
         process.exit(1);
     }
 
-    // 1. Compile circuit with optimization
     await runCommand(
         `circom ${circuitPath} --r1cs --wasm --sym --O2 -o ${buildDir}`,
         'Compiling circuit with optimization'
@@ -138,8 +149,8 @@ async function main() {
     if (!fs.existsSync(ptauPath)) {
         console.log(`\n📥 Downloading powers of tau (size ${CIRCUIT_CONFIG.PTAU_SIZE})...`);
         const ptauUrl = `https://storage.googleapis.com/zkevm/ptau/powersOfTau28_hez_final_${CIRCUIT_CONFIG.PTAU_SIZE}.ptau`;
-        await downloadFile(ptauUrl, ptauPath);
-        console.log('✅ Powers of tau downloaded');
+        await downloadFile(ptauUrl, ptauPath, CIRCUIT_CONFIG.PTAU_HASH);
+        console.log('✅ Powers of tau downloaded and hash verified');
     } else {
         console.log(`\n✓ Powers of tau already exists`);
     }
@@ -170,7 +181,6 @@ async function main() {
     console.log(`   Verification key: ${vkeyPath}`);
     console.log(`   Solidity verifier: ${verifierPath}`);
 
-    // Display circuit info
     console.log('\n📊 Getting circuit info...');
     try {
         const { stdout } = await execAsync(`snarkjs r1cs info ${buildPath}.r1cs`);

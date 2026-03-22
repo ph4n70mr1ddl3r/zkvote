@@ -1,12 +1,12 @@
 {
     "root": true,
     "env": {
-        "es2020": true,
+        "es2022": true,
         "node": true
     },
     "extends": "eslint:recommended",
     "parserOptions": {
-        "ecmaVersion": 2020,
+        "ecmaVersion": 2022,
         "sourceType": "module"
     },
     "ignorePatterns": ["build/**/*", "node_modules/**/*"],
@@ -20,6 +20,7 @@
         "no-throw-literal": "error",
         "prefer-promise-reject-errors": "error",
         "object-shorthand": ["error", "always"],
-        "no-param-reassign": ["error", { "props": false }]
+        "no-param-reassign": ["error", { "props": false }],
+        "no-await-in-loop": "warn"
     }
 }

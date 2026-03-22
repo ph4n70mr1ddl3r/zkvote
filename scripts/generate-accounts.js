@@ -1,19 +1,12 @@
-import { ethers } from 'ethers';
 import fs from 'fs';
 import path from 'path';
+import { ethers } from 'ethers';
 import { FILE_PATHS, NUM_ACCOUNTS } from '../utils/constants.js';
 import { writeJsonFile } from '../utils/json-helper.js';
 
-/**
- * Generate Ethereum accounts for testing the ZKP voting system
- * Creates NUM_ACCOUNTS valid voters and NUM_ACCOUNTS invalid voters
- *
- * SECURITY WARNING: These accounts are stored with private keys in JSON files.
- * DO NOT use these accounts in production. They are for testing purposes only.
- * Private keys are stored in plain text - never commit or share these files.
- */
+import { TEST_MNEMONIC, INVALID_MNEMONIC } from '../utils/test-wallets.js';
 
-function generateAccounts(count) {
+function generateAccounts(count, mnemonic) {
     if (!Number.isInteger(count)) {
         throw new Error('Account count must be an integer');
     }
@@ -26,13 +19,10 @@ function generateAccounts(count) {
     const accounts = [];
 
     for (let i = 0; i < count; i++) {
-        // Generate random wallet
-        const wallet = ethers.Wallet.createRandom();
-
+        const wallet = ethers.HDNodeWallet.fromPhrase(mnemonic).derivePath(`m/44'/60'/0'/0/${i}`);
         accounts.push({
             index: i,
             address: wallet.address,
-            privateKey: wallet.privateKey,
         });
     }
 
@@ -40,7 +30,7 @@ function generateAccounts(count) {
 }
 
 async function main() {
-    console.log('🔑 Generating Ethereum accounts...\n');
+    console.log('Generating deterministic Ethereum accounts...\n');
 
     const dataDir = path.join(process.cwd(), 'data');
     if (!fs.existsSync(dataDir)) {
@@ -48,30 +38,34 @@ async function main() {
     }
 
     console.log(`Generating ${NUM_ACCOUNTS} valid voter accounts...`);
-    const validVoters = generateAccounts(NUM_ACCOUNTS);
+    const validVoters = generateAccounts(NUM_ACCOUNTS, TEST_MNEMONIC);
     const validVotersPath = path.join(process.cwd(), FILE_PATHS.data.validVoters);
     writeJsonFile(validVotersPath, validVoters);
-    console.log(`✅ Valid voters saved to: ${validVotersPath}`);
+    console.log(`Valid voters saved to: ${validVotersPath}`);
     console.log(`   First address: ${validVoters[0].address}`);
-    console.log(`   Last address:  ${validVoters[NUM_ACCOUNTS - 1].address}\n`);
+    console.log(`   last address:  ${validVoters[NUM_ACCOUNTS - 1].address}\n`);
 
     console.log(`Generating ${NUM_ACCOUNTS} invalid voter accounts...`);
-    const invalidVoters = generateAccounts(NUM_ACCOUNTS);
+    const invalidVoters = generateAccounts(NUM_ACCOUNTS, INVALID_MNEMONIC);
     const invalidVotersPath = path.join(process.cwd(), FILE_PATHS.data.invalidVoters);
     writeJsonFile(invalidVotersPath, invalidVoters);
-    console.log(`✅ Invalid voters saved to: ${invalidVotersPath}`);
+    console.log(`Invalid voters saved to: ${invalidVotersPath}`);
     console.log(`   First address: ${invalidVoters[0].address}`);
-    console.log(`   Last address:  ${invalidVoters[NUM_ACCOUNTS - 1].address}\n`);
+    console.log(`   last address:  ${invalidVoters[NUM_ACCOUNTS - 1].address}\n`);
 
-    console.log('🎉 Account generation complete!');
+    console.log('account generation complete!');
     console.log(`   Total accounts generated: ${NUM_ACCOUNTS * 2}`);
+    console.log('\n   Note: Wallets are generated deterministically from a mnemonic.');
+    console.log('   Use utils/test-wallets.js to get wallets for signing.');
+    console.log('   Private keys are NEVER stored in files.');
 }
 
-main()
-    .then(() => {
-        process.exit(0);
+ console.log('   This addresses are test-only - NEVER use them in production!');
+');
+
+ process.exit(0);
     })
-    .catch(error => {
-        console.error('❌ Error generating accounts:', error.message);
+    .catch(error) {
+        console.error('Error generating accounts:', error.message);
         process.exit(1);
     });

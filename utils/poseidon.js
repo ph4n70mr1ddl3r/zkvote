@@ -125,9 +125,9 @@ export function validateEcdsaScalar(value, name, options = {}) {
         throw new Error(`${name} must be less than secp256k1 curve order`);
     }
     if (!allowMalleable && bigIntValue > SECP256K1_N_HALF) {
-        console.warn(
-            `⚠️  Warning: ${name} is a "high-s" value which may cause signature malleability issues. ` +
-                `Consider using low-s (s <= n/2) for EIP-2 compliance.`
+        throw new Error(
+            `${name} is a "high-s" value which causes signature malleability issues. ` +
+                `Use low-s (s <= n/2) for EIP-2 compliance. Use toLowS() to convert.`
         );
     }
     return bigIntValue;

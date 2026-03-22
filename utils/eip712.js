@@ -80,6 +80,9 @@ export async function signVoteMessage(wallet, topicId) {
     if (!wallet || typeof wallet.signTypedData !== 'function') {
         throw new Error('Invalid wallet instance provided');
     }
+    if (!wallet.address || typeof wallet.address !== 'string') {
+        throw new Error('Wallet must have a valid address property');
+    }
 
     const domain = createDomain(topicId);
     const message = createVoteMessage(topicId);
