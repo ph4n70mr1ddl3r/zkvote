@@ -11,7 +11,7 @@ build/
 *.vkey
 *.json.proof
 *.json.public
-verification_key.json
+*_verification_key.json
 
 # Compiled circuit JS
 circuits/merkle-proof_js/

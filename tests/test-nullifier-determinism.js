@@ -4,6 +4,8 @@ import { signVoteMessage, signatureToFieldElements } from '../utils/eip712.js';
 import { computeNullifier } from '../utils/poseidon.js';
 import { FILE_PATHS, DISPLAY_WIDTH } from '../utils/constants.js';
 import { readAndValidateJsonFile } from '../utils/json-helper.js';
+import { getTestWallet, getTestWalletAddress, TEST_MNEMONIC, INVALID_MNEMONIC,
+        } from '../utils/test-wallets.js';
 
 async function testNullifierDeterminism() {
     console.log('\n' + '='.repeat(DISPLAY_WIDTH.STANDARD));
@@ -16,10 +18,74 @@ async function testNullifierDeterminism() {
             isArray: true,
         });
 
+        const invalidVotersPath = path.join(process.cwd(), FILE_PATHS.data.invalidVoters);
+        const invalidVoters = readAndValidateJsonFile(invalidVotersPath, {
+            isArray: true,
+        });
+
+        const topic1 = 'topic-A';
+        const topic2 = 'topic-B';
+
+        console.log(`Testing ${numVoters} voters x ${numTopics} topics = ${numVoters * numTopics} nullifiers\n`);
+
+        const nullifierSet = new Set();
+        const collisions = [];
+
+        for (let v = 0; v < numVoters; v++) {
+            const voter = voters[v];
+            const wallet = getTestWallet(v, TEST_MNEMONIC);
+
+            for (let t = 0; t < numTopics; t++) {
+                const sig = await signVoteMessage(wallet, topic);
+                const fields = signatureToFieldElements(sig);
+                const topicHash = ethers.id(topic)
+
+                const nullifier = await computeNullifier(
+                    fields.r,
+                    fields.s,
+                    topicHash,
+                    sig.messageHash
+                }
+
+                if (nullifierSet.has(nullifier)) {
+                    collisions.push({ voterIndex: v, topic, nullifier });
+                } else {
+                    nullifierSet.add(nullifier);
+                }
+
+                processed++;
+            }
+        }
+
+        console.log(`Processed: ${processed} nullifiers`);
+        console.log(`Unique nullifiers: ${nullifierSet.size}`);
+        console.log(`Collisions: ${collisions.length}`);
+
+        if (collisions.length > 0) {
+            console.error('\nCollision detected!');
+            for (const c of collisions) {
+                console.error(`  Voter ${c.voterIndex}, topic "${c.topic}": ${c.nullifier}`);
+            }
+            throw new Error(`Found ${collisions.length} nullifier collisions`);
+        }
+    } catch (error) {
+        console.error('\nTest failed:', error.message);
+        return false;
+    }
+}
+
+
         const voter1 = voters[0];
         const voter2 = voters[1];
-        const wallet1 = new ethers.Wallet(voter1.privateKey);
-        const wallet2 = new ethers.Wallet(voter2.privateKey);
+        const wallet1 = getTestWallet(0, TEST_SEED);
+        const wallet2 = getTestWallet(1, TEST_SEED);
+
+        if (wallet1.address.toLowerCase() !== voter1.address.toLowerCase()) {
+            throw new Error(`Wallet address mismatch for voter1`);
+        }
+        if (wallet2.address.toLowerCase() !== voter2.address.toLowerCase()) {
+            throw new Error(`Wallet address mismatch for voter2`);
+        }
 
         console.log(`Voter 1: ${voter1.address}`);
         console.log(`Voter 2: ${voter2.address}\n`);

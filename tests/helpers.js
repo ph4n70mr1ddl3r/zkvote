@@ -7,6 +7,9 @@ import { addressToFieldElement } from '../utils/poseidon.js';
 import { generateProofWithTimeout } from '../utils/proof-helper.js';
 import { FILE_PATHS, MERKLE_PADDING_VALUE, TREE_DEPTH } from '../utils/constants.js';
 import { readAndValidateJsonFile } from '../utils/json-helper.js';
+import { getTestWallet, TEST_SEED } from '../utils/test-wallets.js';
+
+const INVALID_SEED = TEST_SEED + '-invalid';
 
 export function loadTestFixtures() {
     const votersPath = path.join(process.cwd(), FILE_PATHS.data.validVoters);
@@ -28,7 +31,7 @@ export function loadTestFixtures() {
     return { voters, invalidVoters, treeData, vkey };
 }
 
-export function getWallet(voters, index) {
+export function getWallet(voters, index, useInvalid = false) {
     if (!Array.isArray(voters) || voters.length === 0) {
         throw new Error('Voters array must be non-empty');
     }
@@ -38,7 +41,14 @@ export function getWallet(voters, index) {
     if (index >= voters.length) {
         throw new Error(`Voter index ${index} out of bounds (0-${voters.length - 1})`);
     }
-    return new ethers.Wallet(voters[index].privateKey);
+    const seed = useInvalid ? INVALID_SEED : TEST_SEED;
+    const wallet = getTestWallet(index, seed);
+    if (wallet.address.toLowerCase() !== voters[index].address.toLowerCase()) {
+        throw new Error(
+            `Wallet address mismatch: derived ${wallet.address}, expected ${voters[index].address}`
+        );
+    }
+    return wallet;
 }
 
 export function createFakeMerkleProof() {

@@ -4,6 +4,7 @@ import { signVoteMessage, signatureToFieldElements } from '../utils/eip712.js';
 import { computeNullifier } from '../utils/poseidon.js';
 import { FILE_PATHS, DISPLAY_WIDTH } from '../utils/constants.js';
 import { readAndValidateJsonFile } from '../utils/json-helper.js';
+import { getTestWallet, TEST_SEED } from '../utils/test-wallets.js';
 
 async function testNullifierCollision() {
     console.log('\n' + '='.repeat(DISPLAY_WIDTH.STANDARD));
@@ -28,7 +29,11 @@ async function testNullifierCollision() {
 
         for (let v = 0; v < numVoters; v++) {
             const voter = voters[v];
-            const wallet = new ethers.Wallet(voter.privateKey);
+            const wallet = getTestWallet(v, TEST_SEED);
+
+            if (wallet.address.toLowerCase() !== voter.address.toLowerCase()) {
+                throw new Error(`Wallet address mismatch at index ${v}`);
+            }
 
             for (let t = 0; t < numTopics; t++) {
                 const topic = topics[t];
@@ -42,12 +47,6 @@ async function testNullifierCollision() {
                     topicHash,
                     sig.messageHash
                 );
-
-                if (nullifierSet.has(nullifier)) {
-                    collisions.push({ voterIndex: v, topic, nullifier });
-                } else {
-                    nullifierSet.add(nullifier);
-                }
 
                 processed++;
             }
