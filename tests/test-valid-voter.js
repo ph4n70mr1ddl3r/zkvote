@@ -96,11 +96,11 @@ async function testValidVoter() {
         return true;
     } catch (error) {
         console.error('\n❌ Test failed:', error.message);
+        console.error(error.stack);
         return false;
     }
 }
 
-// Run test
 testValidVoter()
     .then(passed => {
         console.log('\n' + '='.repeat(DISPLAY_WIDTH.STANDARD));
@@ -108,5 +108,6 @@ testValidVoter()
     })
     .catch(error => {
         console.error('\n❌ Fatal error:', error.message);
+        console.error(error.stack);
         process.exit(1);
     });

@@ -2,14 +2,20 @@ import { poseidonHash2, addressToFieldElement } from './poseidon.js';
 import { TREE_DEPTH, MERKLE_PADDING_VALUE, ETHEREUM_ADDRESS_REGEX } from './constants.js';
 
 /**
- * Merkle tree helper functions for proof generation and verification
+ * Merkle tree helper functions for proof generation and verification.
+ * Uses Poseidon hash for SNARK-friendly Merkle tree construction.
  */
 
 /**
- * Build a Merkle tree from addresses
- * @param {Array<string>} addresses - Array of Ethereum addresses
- * @returns {Promise<Object>} Merkle tree object with root, tree structure, and leaves
- * @throws {Error} If addresses array is empty or contains invalid addresses
+ * Build a Merkle tree from a list of Ethereum addresses.
+ * The tree uses Poseidon hash for SNARK compatibility.
+ * @param {Array<string>} addresses - Array of Ethereum addresses (0x-prefixed)
+ * @returns {Promise<Object>} Merkle tree object containing:
+ *   - root: Merkle root as decimal string
+ *   - tree: Array of arrays representing tree levels (bottom to top)
+ *   - leaves: Padded leaf array with field element representations
+ * @throws {TypeError} If addresses is not an array
+ * @throws {Error} If addresses array is empty, contains invalid addresses, or has duplicates
  */
 export async function buildMerkleTree(addresses) {
     if (!Array.isArray(addresses)) {
@@ -74,10 +80,13 @@ export async function buildMerkleTree(addresses) {
 }
 
 /**
- * Generate Merkle proof for a specific leaf index
- * @param {Array<Array<string>>} tree - Merkle tree structure
- * @param {number} leafIndex - Index of the leaf to generate proof for
- * @returns {Object} Merkle proof with siblings and path indices
+ * Generate a Merkle proof for a specific leaf index.
+ * The proof consists of sibling nodes and path indices at each level.
+ * @param {Array<Array<string>>} tree - Merkle tree structure from buildMerkleTree
+ * @param {number} leafIndex - Index of the leaf to generate proof for (0-based)
+ * @returns {Object} Merkle proof containing:
+ *   - siblings: Array of sibling node values at each level
+ *   - pathIndices: Array of 0 (left) or 1 (right) indicating position
  * @throws {Error} If tree structure is invalid or leafIndex is out of bounds
  */
 export function getMerkleProof(tree, leafIndex) {
@@ -120,12 +129,12 @@ export function getMerkleProof(tree, leafIndex) {
 }
 
 /**
- * Verify a Merkle proof
- * Recomputes the Merkle root from leaf and proof path, compares to expected root
- * @param {string} leaf - Leaf value to verify
- * @param {Object} proof - Merkle proof with siblings and pathIndices arrays
- * @param {string} root - Expected Merkle root
- * @returns {Promise<boolean>} True if proof is valid
+ * Verify a Merkle proof by recomputing the root from leaf and proof.
+ * Uses Poseidon hash to match the tree construction.
+ * @param {string} leaf - Leaf value as decimal string
+ * @param {Object} proof - Merkle proof object with siblings and pathIndices arrays
+ * @param {string} root - Expected Merkle root as decimal string
+ * @returns {Promise<boolean>} True if proof is valid (recomputed root matches expected)
  */
 export async function verifyMerkleProof(leaf, proof, root) {
     let current = leaf;
@@ -145,7 +154,8 @@ export async function verifyMerkleProof(leaf, proof, root) {
 }
 
 /**
- * Convert Merkle proof to circuit input format
+ * Convert Merkle proof to circuit input format.
+ * Renames siblings to pathElements for circuit compatibility.
  * @param {Object} proof - Merkle proof object with siblings and pathIndices
  * @returns {Object} Circuit input format with pathElements and pathIndices
  * @throws {Error} If proof structure is invalid
@@ -162,6 +172,31 @@ export function proofToCircuitInput(proof) {
         pathElements: proof.siblings,
         pathIndices: proof.pathIndices,
     };
+}
+
+/**
+ * Get the leaf index for an address in the tree.
+ * Useful for looking up a voter's position in the Merkle tree.
+ * @param {Array<string>} leaves - Array of leaf values from tree
+ * @param {string} address - Ethereum address to find
+ * @returns {number} Index of the address in the leaves array, or -1 if not found
+ */
+export function getLeafIndex(leaves, address) {
+    if (!Array.isArray(leaves)) {
+        throw new Error('Leaves must be an array');
+    }
+    const addressField = addressToFieldElement(address);
+    return leaves.findIndex(leaf => leaf === addressField);
+}
+
+/**
+ * Check if an address is in the Merkle tree.
+ * @param {Array<string>} leaves - Array of leaf values from tree
+ * @param {string} address - Ethereum address to check
+ * @returns {boolean} True if address is in the tree
+ */
+export function isAddressInTree(leaves, address) {
+    return getLeafIndex(leaves, address) !== -1;
 }
 
 export { TREE_DEPTH };

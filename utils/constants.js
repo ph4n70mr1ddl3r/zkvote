@@ -6,7 +6,7 @@ import 'dotenv/config';
 export const TREE_DEPTH = 7;
 
 /**
- * Padding value for Merkle tree leaves (using BN254 field order)
+ * Padding value for Merkle tree leaves (using BN254 field order - 1)
  */
 export const MERKLE_PADDING_VALUE =
     '21888242871839275222246405745257275088548364400416034343698204186575808495616';
@@ -27,7 +27,7 @@ export const DEFAULT_TOPIC_ID = 'vote-topic-2024';
 export const ALLOWED_VOTE_MESSAGE_PATTERN = /^[\x20-\x7E]+$/;
 
 /**
- * EIP-712 domain configuration
+ * EIP-712 domain configuration for typed data signing
  */
 function parseChainId(envValue) {
     if (envValue === undefined || envValue === null || envValue === '') {
@@ -83,8 +83,14 @@ export const MAX_VOTE_MESSAGE_LENGTH = 500;
  */
 export const MAX_TOPIC_ID_LENGTH = 256;
 
+/**
+ * Pattern for valid topic IDs (alphanumeric, hyphen, underscore only)
+ */
 export const TOPIC_ID_PATTERN = /^[a-zA-Z0-9_-]+$/;
 
+/**
+ * Regular expression for validating Ethereum addresses
+ */
 export const ETHEREUM_ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
 
 /**
@@ -95,12 +101,24 @@ export const CIRCUIT_CONFIG = {
     PTAU_SIZE: 15,
 };
 
+/**
+ * Download timeout in milliseconds (5 minutes)
+ */
 export const DOWNLOAD_TIMEOUT_MS = 300000;
 
+/**
+ * Maximum JSON file size in bytes (50MB)
+ */
 export const MAX_JSON_FILE_SIZE_BYTES = 50 * 1024 * 1024;
 
+/**
+ * Maximum proof file size in bytes (10MB)
+ */
 export const MAX_PROOF_FILE_SIZE_BYTES = 10 * 1024 * 1024;
 
+/**
+ * Proof generation timeout in milliseconds (2 minutes)
+ */
 export const PROOF_GENERATION_TIMEOUT_MS = 120000;
 
 /**
@@ -109,7 +127,8 @@ export const PROOF_GENERATION_TIMEOUT_MS = 120000;
 export const NUM_ACCOUNTS = 100;
 
 /**
- * Public signal indices in proof
+ * Public signal indices in proof output
+ * Maps signal names to their array indices in publicSignals
  */
 export const PUBLIC_SIGNAL = Object.freeze({
     NULLIFIER: 0,
@@ -118,10 +137,13 @@ export const PUBLIC_SIGNAL = Object.freeze({
     MESSAGE_HASH: 3,
 });
 
+/**
+ * Expected number of public signals in proof output
+ */
 export const EXPECTED_PUBLIC_SIGNALS_COUNT = 4;
 
 /**
- * Display widths for console output
+ * Display widths for console output formatting
  */
 export const DISPLAY_WIDTH = {
     STANDARD: 70,
@@ -140,6 +162,7 @@ export const MAX_VOTER_INDEX = MAX_TREE_SIZE - 1;
 
 /**
  * BN254 field order (prime for the alt_bn128 curve)
+ * All field elements in circuits must be less than this value
  */
 export const BN254_FIELD_ORDER = BigInt(
     '21888242871839275222246405745257275088548364400416034343698204186575808495617'
@@ -147,7 +170,14 @@ export const BN254_FIELD_ORDER = BigInt(
 
 /**
  * secp256k1 curve order (N parameter)
+ * ECDSA signature components r and s must be less than this value
  */
 export const SECP256K1_N = BigInt(
     '115792089237316195423570985008687907852837564279074904382605163141518161494337'
 );
+
+/**
+ * Half of secp256k1 curve order (N/2) for low-s signature validation
+ * EIP-2 requires s <= N/2 for transaction validity
+ */
+export const SECP256K1_N_HALF = SECP256K1_N / 2n;
