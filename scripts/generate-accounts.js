@@ -53,19 +53,19 @@ async function main() {
     console.log(`   First address: ${invalidVoters[0].address}`);
     console.log(`   last address:  ${invalidVoters[NUM_ACCOUNTS - 1].address}\n`);
 
-    console.log('account generation complete!');
+    console.log('Account generation complete!');
     console.log(`   Total accounts generated: ${NUM_ACCOUNTS * 2}`);
     console.log('\n   Note: Wallets are generated deterministically from a mnemonic.');
     console.log('   Use utils/test-wallets.js to get wallets for signing.');
     console.log('   Private keys are NEVER stored in files.');
+    console.log('\n⚠️  These addresses are test-only - NEVER use them in production!');
 }
 
- console.log('   This addresses are test-only - NEVER use them in production!');
-');
-
- process.exit(0);
+main()
+    .then(() => {
+        process.exit(0);
     })
-    .catch(error) {
+    .catch(error => {
         console.error('Error generating accounts:', error.message);
         process.exit(1);
     });

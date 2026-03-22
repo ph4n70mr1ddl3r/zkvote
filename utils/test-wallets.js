@@ -6,6 +6,8 @@ const TEST_MNEMONIC =
 const INVALID_MNEMONIC =
     'abandon ability able about above absent absorb abstract absurd abuse access accident accident';
 
+const TEST_SEED = TEST_MNEMONIC;
+
 export function getTestWallet(index, mnemonic = TEST_MNEMONIC) {
     if (!Number.isInteger(index) || index < 0) {
         throw new Error(`Index must be a non-negative integer, got ${index}`);
@@ -18,4 +20,4 @@ export function getTestWalletAddress(index, mnemonic = TEST_MNEMONIC) {
     return getTestWallet(index, mnemonic).address;
 }
 
-export { TEST_MNEMONIC, INVALID_MNEMONIC };
+export { TEST_MNEMONIC, INVALID_MNEMONIC, TEST_SEED };

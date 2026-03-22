@@ -48,6 +48,12 @@ async function testNullifierCollision() {
                     sig.messageHash
                 );
 
+                if (nullifierSet.has(nullifier)) {
+                    collisions.push({ voterIndex: v, topic, nullifier });
+                } else {
+                    nullifierSet.add(nullifier);
+                }
+
                 processed++;
             }
         }
